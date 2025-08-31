@@ -1,0 +1,54 @@
+name: Scrape Meow (every 6h)
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # 00:00, 06:00, 12:00, 18:00 UTC
+  workflow_dispatch:         # ручной запуск по кнопке
+
+permissions:
+  contents: read
+
+concurrency:
+  group: scrape-meow
+  cancel-in-progress: false  # не убиваем предыдущий скрейп, если он ещё идёт
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install deps (if any)
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install --upgrade pip
+            pip install -r requirements.txt
+          fi
+
+      # если скрипт пишет файлы — убедись, что есть нужные каталоги
+      - name: Run scraper
+        env:
+          # прокинь секреты, если нужны (пример):
+          # API_KEY: ${{ secrets.API_KEY }}
+          # PROXY_URL: ${{ secrets.PROXY_URL }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python scrape_meow.py
+          # если файл лежит в другом месте:
+          # python scripts/scrape_meow.py
+
+      # пример: сохранить артефакт (логи/результаты) — опционально
+      # - name: Upload results
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: scrape-output
+      #     path: output/**
