@@ -17,15 +17,20 @@ geo = RateLimiter(ArcGIS(timeout=10).geocode, min_delay_seconds=WAIT_GEO)
 vk  = "https://api.vk.com/method/wall.get"
 
 def vk_wall(offset: int):
-    params = dict(domain=DOMAIN, offset=offset, count=BATCH,
+    params = dict(
+        domain=DOMAIN,
+        offset=offset,
+        count=BATCH,
+        access_token=TOKEN,
+        v="5.131",
+    )
     resp = requests.get(vk, params=params, timeout=15).json()
     if "response" in resp and "items" in resp["response"]:
         return resp["response"]["items"]
     else:
         print("VK API error:", resp)
         return []
-    return requests.get(vk, params=params, timeout=15).json()["response"]["items"]
-
+    
 def extract(text: str):
     m_date = re.search(r"\b(\d{2})\.(\d{2})\b", text)
     m_loc  = re.search(r"📍\s*(.+)", text)
@@ -33,7 +38,7 @@ def extract(text: str):
         return None
     date  = f"{YEAR_DEFAULT}-{m_date.group(2)}-{m_date.group(1)}"
     loc   = m_loc.group(1).split('➡️')[0].strip()
-    if not re.search(r"(калининград|гурьевск|светлогорск|янтарный)", loc, re.I):
+    if not re.search(r"(калининград|гурьевск|светлогорск|янтарный|балтийск)", loc, re.I):
         loc += ", Калининград"
     title = re.sub(r"^\d{2}\.\d{2}\s*\|\s*", "", text.split('\n')[0]).strip()
     return dict(title=title, date=date, location=loc)
@@ -66,17 +71,7 @@ df = df.dropna(subset=["lat", "lon"])
 print(f"С координатами: {len(df)} | без координат: {bad_cnt}")
 
 # ────────────────────── СОХРАНЯЕМ ───────────────────────
-df.to_json(
-    "events.json", orient="records", force_ascii=False, indent=2)
-print("✅  events.json создан")ame(latlon, index=df.index)
-
-bad_cnt = df["lat"].isna().sum()
-df = df.dropna(subset=["lat", "lon"])
-df = df.dropna(subset=["lat", "lon"])
-
-print(f"С координатами: {len(df)} | без координат: {bad_cnt}")
-
-# ────────────────────── СОХРАНЯЕМ ───────────────────────
-df[["title","date","location","lat","lon"]].to_json(
-    "events.json", orient="records", force_ascii=False, indent=2)
+df[["title", "date", "location", "lat", "lon"]].to_json(
+    "events.json", orient="records", force_ascii=False, indent=2
+)
 print("✅  events.json создан")
