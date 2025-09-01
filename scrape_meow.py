@@ -36,6 +36,9 @@ def extract(text: str):
     m_loc  = re.search(r"📍\s*(.+)", text)
     if not (m_date and m_loc):
         return None
+     month = m_date.group(2)
+    if not ("01" <= month <= "12"):
+        return None
     date  = f"{YEAR_DEFAULT}-{m_date.group(2)}-{m_date.group(1)}"
     loc   = m_loc.group(1).split('➡️')[0].strip()
     if not re.search(r"(калининград|гурьевск|светлогорск|янтарный|балтийск)", loc, re.I):
