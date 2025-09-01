@@ -1,4 +1,4 @@
-name: Scrape Meow (every 6h)
+name: meow
 
 on:
   schedule:
