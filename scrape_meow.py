@@ -1,4 +1,5 @@
 # Python 3.10+
+import os
 import re, time, requests, pandas as pd
 from geopy.geocoders import ArcGIS
 from geopy.extra.rate_limiter import RateLimiter
@@ -17,7 +18,12 @@ vk  = "https://api.vk.com/method/wall.get"
 
 def vk_wall(offset: int):
     params = dict(domain=DOMAIN, offset=offset, count=BATCH,
-                  access_token=TOKEN, v="5.199")
+    resp = requests.get(vk, params=params, timeout=15).json()
+    if "response" in resp and "items" in resp["response"]:
+        return resp["response"]["items"]
+    else:
+        print("VK API error:", resp)
+        return []
     return requests.get(vk, params=params, timeout=15).json()["response"]["items"]
 
 def extract(text: str):
@@ -43,18 +49,29 @@ while off < MAX_POSTS:
     off += BATCH
     time.sleep(WAIT_REQ)
 
-print("Анонсов найдено:", len(records))
-df = pd.DataFrame(records).drop_duplicates()
-
-# ────────────────────── ГЕОКОДИНГ ────────────────────────
 def to_latlon(addr: str):
     try:
         g = geo(addr)
         return (g.latitude, g.longitude) if g else (None, None)
     except: return (None, None)
 
+# Создаем DataFrame из собранных записей
+df = pd.DataFrame(records)
+
+# Добавляем координаты
 df[["lat", "lon"]] = df["location"].apply(lambda a: pd.Series(to_latlon(a)))
 bad_cnt = df["lat"].isna().sum()
+df = df.dropna(subset=["lat", "lon"])
+
+print(f"С координатами: {len(df)} | без координат: {bad_cnt}")
+
+# ────────────────────── СОХРАНЯЕМ ───────────────────────
+df.to_json(
+    "events.json", orient="records", force_ascii=False, indent=2)
+print("✅  events.json создан")ame(latlon, index=df.index)
+
+bad_cnt = df["lat"].isna().sum()
+df = df.dropna(subset=["lat", "lon"])
 df = df.dropna(subset=["lat", "lon"])
 
 print(f"С координатами: {len(df)} | без координат: {bad_cnt}")

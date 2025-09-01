@@ -3,7 +3,12 @@ name: Scrape Meow (every 6h)
 on:
   schedule:
     - cron: "0 */6 * * *"   # 00:00, 06:00, 12:00, 18:00 UTC
-  workflow_dispatch:         # ручной запуск по кнопке
+  workflow_dispatch:
+    inputs:
+      script_path:
+        description: 'Path to the scraper script'
+        required: false
+        default: 'scrape_meow.py'
 
 permissions:
   contents: read
@@ -15,7 +20,7 @@ concurrency:
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -29,21 +34,25 @@ jobs:
 
       - name: Install deps (if any)
         run: |
-          if [ -f requirements.txt ]; then
+          if [ -f pyproject.toml ]; then
+            pip install --upgrade pip
+            pip install poetry
+            poetry install
+          elif [ -f requirements.txt ]; then
             pip install --upgrade pip
             pip install -r requirements.txt
           fi
-
-      # если скрипт пишет файлы — убедись, что есть нужные каталоги
-      - name: Run scraper
-        env:
           # прокинь секреты, если нужны (пример):
           # API_KEY: ${{ secrets.API_KEY }}
           # PROXY_URL: ${{ secrets.PROXY_URL }}
+          # PYTHONUNBUFFERED=1 позволяет сразу видеть вывод логов (без буферизации)
           PYTHONUNBUFFERED: "1"
+          # прокинь секреты, если нужны (пример):
+          # API_KEY: ${{ secrets.API_KEY }}
+          # PROXY_URL: ${{ secrets.PROXY_URL }}
         run: |
-          python scrape_meow.py
-          # если файл лежит в другом месте:
+          python "${{ github.event.inputs.script_path }}"
+          # если файл лежит в другом месте, укажи путь при запуске workflow
           # python scripts/scrape_meow.py
 
       # пример: сохранить артефакт (логи/результаты) — опционально
