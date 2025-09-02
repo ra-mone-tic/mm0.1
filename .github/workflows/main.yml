@@ -1,0 +1,40 @@
+name: Update events data
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */3 * * *"   # каждые 3 часа (UTC), работает только из default-ветки
+
+permissions:
+  contents: write            # нужно для коммита GITHUB_TOKEN'ом
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas geopy
+
+      - name: Run scraper
+        env:
+          VK_TOKEN: ${{ secrets.VK_TOKEN }}
+        run: python scrape_meow.py
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: events.json
+          message: 'chore: update events data'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
