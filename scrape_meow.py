@@ -25,11 +25,9 @@ def vk_wall(offset: int):
         v="5.131",
     )
     resp = requests.get(vk, params=params, timeout=15).json()
-    if "response" in resp and "items" in resp["response"]:
-        return resp["response"]["items"]
-    else:
-        print("VK API error:", resp)
-        return []
+    if "error" in resp:
+        raise RuntimeError(f"VK API error: {resp['error']}")
+    return resp.get("response", {}).get("items", [])
     
 def extract(text: str):
     m_date = re.search(r"\b(\d{2})\.(\d{2})\b", text)
