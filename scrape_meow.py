@@ -19,7 +19,7 @@ vk  = "https://api.vk.com/method/wall.get"
 def vk_wall(offset: int):
     params = dict(domain=DOMAIN, offset=offset, count=BATCH,
                   access_token=TOKEN, v="5.199")
-    r = requests.get(vk_url, params=params, timeout=20)
+    r = requests.get(vk, params=params, timeout=20)
     r.raise_for_status()
     data = r.json()
     if "error" in data:
