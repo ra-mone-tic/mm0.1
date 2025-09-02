@@ -3,18 +3,23 @@ name: Update events data
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */3 * * *"
+    - cron: "0 */3 * * *"   # каждые 3 часа (UTC), работает только из default-ветки
+
+permissions:
+  contents: write            # нужно для коммита GITHUB_TOKEN'ом
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
