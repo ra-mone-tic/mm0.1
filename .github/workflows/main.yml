@@ -36,6 +36,6 @@ jobs:
         with:
           add: events.json
           message: 'chore: update events data'
-          pull: '--rebase'
+          pull: '--rebase --autostash'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
