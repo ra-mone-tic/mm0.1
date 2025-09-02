@@ -17,13 +17,15 @@ geo = RateLimiter(ArcGIS(timeout=10).geocode, min_delay_seconds=WAIT_GEO)
 vk  = "https://api.vk.com/method/wall.get"
 
 def vk_wall(offset: int):
-    params = dict(
-        domain=DOMAIN,
-        offset=offset,
-        count=BATCH,
-        access_token=TOKEN,
-        v="5.131",
-    )
+    params = dict(domain=DOMAIN, offset=offset, count=BATCH,
+                  access_token=TOKEN, v="5.199")
+    r = requests.get(vk_url, params=params, timeout=20)
+    r.raise_for_status()
+    data = r.json()
+    if "error" in data:
+        raise RuntimeError(f"VK API error: {data['error']}")
+    return data["response"]["items"]
+
     resp = requests.get(vk, params=params, timeout=15).json()
     if "error" in resp:
         raise RuntimeError(f"VK API error: {resp['error']}")
