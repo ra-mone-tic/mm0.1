@@ -14,7 +14,7 @@ WAIT_GEO     = 1.0                 # пауза ArcGIS                 (≈1000/
 YEAR_DEFAULT = "2025"              # дописываем к dd.mm
 
 geo = RateLimiter(ArcGIS(timeout=10).geocode, min_delay_seconds=WAIT_GEO)
-vk  = "https://api.vk.com/method/wall.get"
+vk  = "https://api.vk.ru/method/wall.get"
 
 def vk_wall(offset: int):
     params = dict(domain=DOMAIN, offset=offset, count=BATCH,
