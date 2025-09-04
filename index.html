@@ -80,34 +80,47 @@
     const JSON_URL     = 'events.json?v=' + Date.now(); // анти-кэш
     const MAPTILER_KEY = '9BgGWvEZYMAkWdKLxOui';        // при 401/403 будет фолбэк
 
-    // Fallback: простой растр OSM
-    const OSM_RASTER_STYLE = {
-      "version": 8,
-      "sources": {
-        "osm": {
-          "type": "raster",
-          "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
-          "tileSize": 256,
-          "attribution": "© OpenStreetMap"
-        }
-      },
-      "layers": [{ "id": "osm", "type": "raster", "source": "osm" }]
-    d.className='item';
-    d.innerHTML=`<strong>${e.title}</strong><br>${e.location}<br><i>${e.date}</i>`;
-    d.onclick=()=>{
+// Fallback: простой растр OSM
+const OSM_RASTER_STYLE = {
+  "version": 8,
+  "sources": {
+    "osm": {
+      "type": "raster",
+      "tiles": ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      "tileSize": 256,
+      "attribution": "© OpenStreetMap"
+    }
+  },
+  "layers": [{ "id": "osm", "type": "raster", "source": "osm" }]
+};
+
+// Функция загрузки и рендера событий
+async function loadEventsAndRender() {
+  const response = await fetch(JSON_URL);
+  const events = await response.json();
+  const upDiv = document.getElementById('upcoming');
+  const input = document.getElementById('event-date');
+  upDiv.innerHTML = '';
+  let first = events.length ? events[0].date : null;
+
+  events.forEach(e => {
+    const d = document.createElement('div');
+    d.className = 'item';
+    d.innerHTML = `<strong>${e.title}</strong><br>${e.location}<br><i>${e.date}</i>`;
+    d.onclick = () => {
       renderForDate(events, e.date);
-      setTimeout(()=>{ flyToEvent(e); }, 80);
+      setTimeout(() => { flyToEvent(e); }, 80);
       document.getElementById('sidebar').classList.remove('open');
-      setTimeout(()=>map.resize(), 120);
+      setTimeout(() => map.resize(), 120);
     };
     upDiv.appendChild(d);
   });
 
   renderForDate(events, first);
-  input.onchange = ev=>{
-    const d=new Date(ev.target.value).toISOString().slice(0,10);
+  input.onchange = ev => {
+    const d = new Date(ev.target.value).toISOString().slice(0, 10);
     renderForDate(events, d);
-    setTimeout(()=>map.resize(), 60);
+    setTimeout(() => map.resize(), 60);
   };
 }
 
