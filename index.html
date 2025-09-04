@@ -18,8 +18,7 @@
     }
     input[type=date]{font-size:16px;}
     #logo{height:32px;}
-    #burger{cursor:pointer;font-size:26px;display:none;}
-    #closeSidebar{cursor:pointer;font-size:22px;font-weight:bold;}
+    #burger{cursor:pointer;font-size:26px;margin-left:auto;}
 
     #layout{
       display:flex;
@@ -34,7 +33,12 @@
     #sidebar{
       width:300px;background:#fff;overflow-y:auto;
       padding:12px;font-size:14px;border-left:1px solid #ccc;
+      position:fixed;right:0;top:0;height:100dvh;
+      transform:translateX(100%);
+      transition:transform .3s;
+      z-index:999;box-shadow:-4px 0 6px rgba(0,0,0,.15);
     }
+    #sidebar.open{transform:translateX(0);}
     #sidebar .item{
       margin-bottom:12px;cursor:pointer;
       border-bottom:1px dashed #ccc;padding-bottom:8px;
@@ -43,14 +47,6 @@
 
     @media (max-width: 768px){
       #layout{flex-direction:column;}
-      #sidebar{
-        position:fixed;right:0;top:0;height:100dvh;
-        transform:translateX(100%);
-        transition:transform .3s;
-        z-index:999;box-shadow:-4px 0 6px rgba(0,0,0,.15);
-      }
-      #sidebar.open{transform:translateX(0);}
-      #burger{display:block;margin-left:auto;}
     }
   </style>
 </head>
@@ -71,7 +67,6 @@
     <div id="sidebar">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <h3 style="margin:0;">Ближайшие события</h3>
-        <span id="closeSidebar">✕</span>
       </div>
       <hr>
       <div id="upcoming">Загрузка…</div>
@@ -97,109 +92,7 @@
         }
       },
       "layers": [{ "id": "osm", "type": "raster", "source": "osm" }]
-    };
-
-    function createMap(useFallback=false){
-      return new maplibregl.Map({
-        container:'map',
-        style: useFallback
-          ? OSM_RASTER_STYLE
-          : `https://api.maptiler.com/maps/basic/style.json?key=${MAPTILER_KEY}`,
-        center:[20.45,54.71],
-        zoom:10
-      });
-    }
-
-    let map = createMap(false);
-
-    function attachControls(){
-      map.addControl(new maplibregl.NavigationControl(),'top-right');
-      map.addControl(new maplibregl.GeolocateControl({
-        positionOptions:{enableHighAccuracy:true},
-        showUserLocation:true
-      }),'top-right');
-    }
-    function wireResize(){
-      map.on('load', () => { map.resize(); setTimeout(()=>map.resize(), 150); });
-      window.addEventListener('resize', () => map.resize());
-    }
-
-    map.on('error', (e) => {
-      const msg = String(e && e.error && e.error.message || '');
-      if (msg.includes('Unauthorized') || msg.includes('Forbidden') || msg.includes('Failed to load')) {
-        try { map.remove(); } catch(_) {}
-        map = createMap(true);
-        attachControls();
-        wireResize();
-        loadEventsAndRender();
-      }
-    });
-
-    attachControls();
-    wireResize();
-
-    // Маркеры
-    let markers=[];
-    function clearMarkers(){ markers.forEach(m=>m.remove()); markers=[]; }
-    function addMarker(ev){
-      const pop=new maplibregl.Popup({offset:25})
-        .setHTML(`<b>${ev.title}</b><br>${ev.location}<br>${ev.date}`);
-      const m=new maplibregl.Marker().setLngLat([ev.lon,ev.lat]).setPopup(pop).addTo(map);
-      markers.push(m);
-    }
-    function flyToEvent(e){
-      map.flyTo({center:[e.lon,e.lat],zoom:14});
-      const m = markers.find(mk => {
-        const p = mk.getLngLat();
-        return Math.abs(p.lat - e.lat) < 1e-5 && Math.abs(p.lng - e.lon) < 1e-5;
-      });
-      if (m) m.togglePopup();
-    }
-
-    // Загрузка данных
-    async function loadEvents(){
-      try{
-        const r = await fetch(JSON_URL, {cache:'no-store'});
-        if(!r.ok) throw new Error(`HTTP ${r.status}`);
-        return await r.json();
-      }catch(err){
-        console.error('Не удалось загрузить events.json:', err);
-        return [];
-      }
-    }
-
-    function renderForDate(events, dateStr){
-      clearMarkers();
-      const todays = events.filter(e => e.date === dateStr);
-      todays.forEach(addMarker);
-      if (todays.length) map.flyTo({center:[todays[0].lon, todays[0].lat], zoom:12});
-    }
-
-    async function loadEventsAndRender(){
-      const events = await loadEvents();
-      const upDiv = document.getElementById('upcoming');
-
-      if(!events.length){
-        upDiv.textContent = 'События не найдены или JSON не загрузился';
-        return;
-      }
-
-      events.sort((a,b)=>a.date.localeCompare(b.date));
-
-      const input = document.getElementById('event-date');
-      input.min = events[0].date; input.max = events.at(-1).date;
-      const today = new Date().toISOString().slice(0,10);
-      const first = events.find(e=>e.date>=today)?.date || events[0].date;
-      input.value = first;
-
-      upDiv.innerHTML = '';
-      const upcoming = events
-        .filter(e=>new Date(e.date)>=new Date(today))
-        .slice(0,100);
-
-      if(!upcoming.length){ upDiv.textContent='События не найдены'; }
-      else upcoming.forEach(e=>{
-        const d=document.createElement('div');
+@@ -203,35 +198,39 @@
         d.className='item';
         d.innerHTML=`<strong>${e.title}</strong><br>${e.location}<br><i>${e.date}</i>`;
         d.onclick=()=>{
@@ -225,10 +118,14 @@
       sb.classList.toggle('open');
       setTimeout(()=>map.resize(), 120);
     };
-    document.getElementById('closeSidebar').onclick=()=>{
-      document.getElementById('sidebar').classList.remove('open');
-      setTimeout(()=>map.resize(), 120);
-    };
+    document.addEventListener('click', (e)=>{
+      const sb = document.getElementById('sidebar');
+      const burger = document.getElementById('burger');
+      if(sb.classList.contains('open') && !sb.contains(e.target) && e.target !== burger){
+        sb.classList.remove('open');
+        setTimeout(()=>map.resize(), 120);
+      }
+    });
 
     // Старт
     loadEventsAndRender();
