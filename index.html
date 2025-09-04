@@ -77,7 +77,7 @@
   <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
   <script>
     // Параметры
-    const JSON_URL     = 'events.json?v=' + Date.now(); // анти-кэш
+    const JSON_URL     = 'events.json?v=1'; // анти-кэш через версию файла
     const MAPTILER_KEY = '9BgGWvEZYMAkWdKLxOui';        // при 401/403 будет фолбэк
 
 // Fallback: простой растр OSM
@@ -93,6 +93,22 @@ const OSM_RASTER_STYLE = {
   },
   "layers": [{ "id": "osm", "type": "raster", "source": "osm" }]
 };
+
+// Инициализация карты MapLibre
+let map;
+window.addEventListener('DOMContentLoaded', () => {
+  map = new maplibregl.Map({
+    container: 'map',
+    style: OSM_RASTER_STYLE,
+    center: [37.6173, 55.7558], // Москва
+    zoom: 10
+  });
+
+  // Старт после инициализации карты
+  map.on('load', () => {
+    loadEventsAndRender();
+  });
+});
 
 // Функция загрузки и рендера событий
 async function loadEventsAndRender() {
@@ -116,10 +132,17 @@ async function loadEventsAndRender() {
     upDiv.appendChild(d);
   });
 
-  renderForDate(events, first);
+  if (first) {
+    renderForDate(events, first);
+  }
   input.onchange = ev => {
     const d = new Date(ev.target.value).toISOString().slice(0, 10);
     renderForDate(events, d);
+    setTimeout(() => map.resize(), 60);
+  };
+}
+      upDiv.innerHTML = '<div style="color:red;">Некорректная дата</div>';
+    }
     setTimeout(() => map.resize(), 60);
   };
 }
@@ -139,8 +162,7 @@ async function loadEventsAndRender() {
       }
     });
 
-    // Старт
-    loadEventsAndRender();
+    // Старт удалён, теперь запуск через map.on('load')
   </script>
 </body>
 </html>

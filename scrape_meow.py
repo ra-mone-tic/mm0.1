@@ -40,7 +40,7 @@ def vk_wall(offset: int):
         raise RuntimeError(f"VK API error: {data['error']}")
     return data["response"]["items"]
 
-CITY_WORDS = r"(калининград|гурьевск|светлогорск|янтарный|балтийск|пионерский|зеленоградск|поселок|посёлок|город|пгт|деревня|село|станция|станция)"
+CITY_WORDS = r"(калининград|гурьевск|светлогорск|янтарный|балтийск|пионерский|зеленоградск|поселок|посёлок|город|пгт|деревня|село|станция)"
 
 def extract(text: str):
     m_date = re.search(r"\b(\d{2})\.(\d{2})\b", text)
@@ -63,8 +63,13 @@ def geocode(addr: str):
         return geocache[addr]
     try:
         g = geo(addr)
-        geocache[addr] = [g.latitude, g.longitude] if g else [None, None]
-    except Exception:
+        if g:
+            geocache[addr] = [g.latitude, g.longitude]
+        else:
+            print(f"[Геокодер] Не удалось получить координаты для адреса: {addr}")
+            geocache[addr] = [None, None]
+    except Exception as e:
+        print(f"[Геокодер] Ошибка при геокодировании адреса '{addr}': {e}")
         geocache[addr] = [None, None]
     return geocache[addr]
 
@@ -87,20 +92,28 @@ if not records:
     OUTPUT_JSON.write_text("[]", encoding="utf-8")
     raise SystemExit(0)
 
-df = pd.DataFrame(records).drop_duplicates()
+df = pd.DataFrame(records).drop_duplicates(subset=["title", "date", "location"])
 
 # ─────────── ГЕОКОДИНГ ───────────
-lats, lons = [], []
-for addr in df["location"]:
-    lat, lon = geocode(addr)
-    lats.append(lat); lons.append(lon)
-df["lat"] = lats; df["lon"] = lons
+from concurrent.futures import ThreadPoolExecutor
+
+def geocode_wrapper(addr):
+    return geocode(addr)
+
+with ThreadPoolExecutor(max_workers=8) as executor:
+    results = list(executor.map(geocode_wrapper, df["location"]))
+
+lats, lons = zip(*results)
+df["lat"] = lats
+df["lon"] = lons
 
 bad_cnt = int(df["lat"].isna().sum())
 df = df.dropna(subset=["lat", "lon"])
+# Очищаем кэш от ошибочных записей ([None, None])
+clean_geocache = {k: v for k, v in geocache.items() if v != [None, None]}
+CACHE_FILE.write_text(json.dumps(clean_geocache, ensure_ascii=False, indent=2), encoding="utf-8")
 
-print(f"С координатами: {len(df)} | без координат: {bad_cnt}")
-
+print("✅  events.json создан/обновлён")
 # ─────────── СОХРАНЕНИЕ ───────────
 df = df[["title","date","location","lat","lon"]].sort_values("date")
 OUTPUT_JSON.write_text(df.to_json(orient="records", force_ascii=False, indent=2), encoding="utf-8")
