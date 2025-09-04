@@ -92,25 +92,24 @@
         }
       },
       "layers": [{ "id": "osm", "type": "raster", "source": "osm" }]
-@@ -203,35 +198,39 @@
-        d.className='item';
-        d.innerHTML=`<strong>${e.title}</strong><br>${e.location}<br><i>${e.date}</i>`;
-        d.onclick=()=>{
-          renderForDate(events, e.date);
-          setTimeout(()=>{ flyToEvent(e); }, 80);
-          document.getElementById('sidebar').classList.remove('open');
-          setTimeout(()=>map.resize(), 120);
-        };
-        upDiv.appendChild(d);
-      });
+    d.className='item';
+    d.innerHTML=`<strong>${e.title}</strong><br>${e.location}<br><i>${e.date}</i>`;
+    d.onclick=()=>{
+      renderForDate(events, e.date);
+      setTimeout(()=>{ flyToEvent(e); }, 80);
+      document.getElementById('sidebar').classList.remove('open');
+      setTimeout(()=>map.resize(), 120);
+    };
+    upDiv.appendChild(d);
+  });
 
-      renderForDate(events, first);
-      input.onchange = ev=>{
-        const d=new Date(ev.target.value).toISOString().slice(0,10);
-        renderForDate(events, d);
-        setTimeout(()=>map.resize(), 60);
-      };
-    }
+  renderForDate(events, first);
+  input.onchange = ev=>{
+    const d=new Date(ev.target.value).toISOString().slice(0,10);
+    renderForDate(events, d);
+    setTimeout(()=>map.resize(), 60);
+  };
+}
 
     // Сайдбар
     document.getElementById('burger').onclick=()=>{
