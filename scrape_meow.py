@@ -1,79 +1,109 @@
 # Python 3.10+
-import os
-import re, time, requests, pandas as pd
+import os, re, time, json
+from pathlib import Path
+
+import requests
+import pandas as pd
 from geopy.geocoders import ArcGIS
 from geopy.extra.rate_limiter import RateLimiter
 
-# ─────────────────────── НАСТРОЙКИ ───────────────────────
-TOKEN        = os.getenv("VK_TOKEN")
-DOMAIN       = "meowafisha"       # паблик ВК
-MAX_POSTS    = 2000                # сколько всего тянуть (offset’ами)
-BATCH        = 100                 # максимум за 1 вызов API
-WAIT_REQ     = 1.1                 # пауза между вызовами wall.get  (1 rps)
-WAIT_GEO     = 1.0                 # пауза ArcGIS                 (≈1000/сутки)
-YEAR_DEFAULT = "2025"              # дописываем к dd.mm
+# ─────────── НАСТРОЙКИ ───────────
+TOKEN        = os.getenv("VK_TOKEN")                 # добавить секрет в GitHub → Settings → Secrets → Actions
+DOMAIN       = os.getenv("VK_DOMAIN", "meowafisha")  # паблик ВК
+MAX_POSTS    = int(os.getenv("VK_MAX_POSTS", "2000"))
+BATCH        = 100
+WAIT_REQ     = 1.1                                   # VK ~1 rps
+WAIT_GEO     = 1.0                                   # ArcGIS ≈1000/сутки
+YEAR_DEFAULT = os.getenv("YEAR_DEFAULT", "2025")
 
+OUTPUT_JSON  = Path("events.json")                   # раздаётся Pages
+CACHE_FILE   = Path("geocode_cache.json")            # коммитим кэш — экономим лимит
+
+assert TOKEN, "VK_TOKEN не задан"
+
+vk_url = "https://api.vk.com/method/wall.get"
 geo = RateLimiter(ArcGIS(timeout=10).geocode, min_delay_seconds=WAIT_GEO)
-vk  = "https://api.vk.ru/method/wall.get"
+
+# Кэш адрес→[lat, lon]
+if CACHE_FILE.exists():
+    geocache = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
+else:
+    geocache = {}
 
 def vk_wall(offset: int):
     params = dict(domain=DOMAIN, offset=offset, count=BATCH,
                   access_token=TOKEN, v="5.199")
-    r = requests.get(vk, params=params, timeout=20)
+    r = requests.get(vk_url, params=params, timeout=20)
     r.raise_for_status()
     data = r.json()
     if "error" in data:
         raise RuntimeError(f"VK API error: {data['error']}")
     return data["response"]["items"]
 
-    resp = requests.get(vk, params=params, timeout=15).json()
-    if "error" in resp:
-        raise RuntimeError(f"VK API error: {resp['error']}")
-    return resp.get("response", {}).get("items", [])
-    
+CITY_WORDS = r"(калининград|гурьевск|светлогорск|янтарный|балтийск|пионерский|зеленоградск|поселок|посёлок|город|пгт|деревня|село|станция|станция)"
+
 def extract(text: str):
     m_date = re.search(r"\b(\d{2})\.(\d{2})\b", text)
     m_loc  = re.search(r"📍\s*(.+)", text)
-    if not (m_date and m_loc): return None
-    month = m_date.group(2)
-    if not ("01" <= month <= "12"):
+    if not (m_date and m_loc):
         return None
-    date  = f"{YEAR_DEFAULT}-{month}-{m_date.group(1)}"
+
+    date  = f"{YEAR_DEFAULT}-{m_date.group(2)}-{m_date.group(1)}"
     loc   = m_loc.group(1).split('➡️')[0].strip()
-    if not re.search(r"(калининград|гурьевск|светлогорск|янтарный|балтийск)", loc, re.I):
+    if not re.search(CITY_WORDS, loc, re.I):
         loc += ", Калининград"
-    title = re.sub(r"^\d{2}\.\d{2}\s*\|\s*", "", text.split('\n')[0]).strip()
+
+    first_line = text.split('\n', 1)[0]
+    title = re.sub(r"^\s*\d{2}\.\d{2}\s*\|\s*", "", first_line).strip()
+
     return dict(title=title, date=date, location=loc)
 
-# ────────────────────── СБОР ПОСТОВ ──────────────────────
+def geocode(addr: str):
+    if addr in geocache:
+        return geocache[addr]
+    try:
+        g = geo(addr)
+        geocache[addr] = [g.latitude, g.longitude] if g else [None, None]
+    except Exception:
+        geocache[addr] = [None, None]
+    return geocache[addr]
+
+# ─────────── СБОР ПОСТОВ ───────────
 records, off = [], 0
 while off < MAX_POSTS:
     items = vk_wall(off)
-    if not items: break
+    if not items:
+        break
     for it in items:
-        evt = extract(it["text"])
-        if evt: records.append(evt)
+        text = it.get("text") or ""
+        evt = extract(text)
+        if evt:
+            records.append(evt)
     off += BATCH
     time.sleep(WAIT_REQ)
 
-def to_latlon(addr: str):
-    try:
-        g = geo(addr)
-        return (g.latitude, g.longitude) if g else (None, None)
-    except: return (None, None)
+print("Анонсов найдено:", len(records))
+if not records:
+    OUTPUT_JSON.write_text("[]", encoding="utf-8")
+    raise SystemExit(0)
 
-# Создаем DataFrame из собранных записей
-df = pd.DataFrame(records)
+df = pd.DataFrame(records).drop_duplicates()
 
-# Добавляем координаты
-df[["lat", "lon"]] = df["location"].apply(lambda a: pd.Series(to_latlon(a)))
-bad_cnt = df["lat"].isna().sum()
+# ─────────── ГЕОКОДИНГ ───────────
+lats, lons = [], []
+for addr in df["location"]:
+    lat, lon = geocode(addr)
+    lats.append(lat); lons.append(lon)
+df["lat"] = lats; df["lon"] = lons
+
+bad_cnt = int(df["lat"].isna().sum())
 df = df.dropna(subset=["lat", "lon"])
 
 print(f"С координатами: {len(df)} | без координат: {bad_cnt}")
 
-# ────────────────────── СОХРАНЯЕМ ───────────────────────
-df[["title", "date", "location", "lat", "lon"]].to_json(
-    "events.json", orient="records", force_ascii=False, indent=2
-)
-print("✅  events.json создан")
+# ─────────── СОХРАНЕНИЕ ───────────
+df = df[["title","date","location","lat","lon"]].sort_values("date")
+OUTPUT_JSON.write_text(df.to_json(orient="records", force_ascii=False, indent=2), encoding="utf-8")
+CACHE_FILE.write_text(json.dumps(geocache, ensure_ascii=False, indent=2), encoding="utf-8")
+
+print("✅  events.json создан/обновлён")
