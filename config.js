@@ -1,1 +1,0 @@
-MAPTILER_KEY = '9BgGWvEZYMAkWdKLxOui';
