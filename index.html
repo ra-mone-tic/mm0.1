@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="modern">
 <head>
   <!-- ===== META ===== -->
   <meta charset="utf-8">
@@ -9,6 +9,7 @@
   <!-- ===== STYLES/ASSETS ===== -->
   <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
   <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+  <link href="assets/css/theme.css" rel="stylesheet"/>
 
   <style>
     /* ===== БАЗОВЫЕ СТИЛИ ===== */
@@ -70,11 +71,24 @@
       #logo{height:24px;}
     }
   </style>
+  <!-- Theme token overrides for existing layout -->
+  <style>
+    body{ background:var(--surface-0); color:var(--text-0); font-family:var(--font-ui); }
+    #controls{ background:var(--surface-1); border-bottom:var(--border); }
+    #burger{ color:var(--text-0); }
+    #logo{ height:40px; cursor:pointer; }
+    #sidebar{ background:var(--surface-1); border-left:var(--border); box-shadow:var(--shadow-sm); }
+    #sidebar div.item{ border-bottom:var(--border); border-radius:var(--radius-sm); transition:background var(--fx-fast), transform var(--fx-fast); }
+    #sidebar div.item:hover{ background:var(--surface-2); }
+    #sidebar div.item.is-active{ outline:2px solid color-mix(in srgb, var(--brand) 55%, transparent); border-radius:var(--radius-sm); }
+    @media (max-width:768px){ #logo{ height:28px; } }
+  </style>
 
   <!-- ===== SCRIPTS (defer) ===== -->
   <script defer src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="script.js"></script>
+  <script defer src="assets/js/theme.js"></script>
   <script>
     document.title = 'MeowTest🔨';
   </script>
@@ -88,6 +102,7 @@
     <img id="logo"
          src="https://thumbs.dreamstime.com/b/cat-builder-holding-drill-white-background-cat-builder-drill-123551503.jpg"
          alt="Meow Records">
+    
     <span id="burger">☰</span>
     <!-- <span id="count"></span> -->
   </div>

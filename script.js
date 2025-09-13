@@ -114,13 +114,13 @@ function addMarker(ev) {
       class="share-btn"
       title="Поделиться"
       onclick="copyShareLink('${ev.id}')"
-      style="position:absolute;right:8px;bottom:6px;border:none;background:#f2f2f2;border-radius:6px;padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;"
+      style="position:absolute;right:8px;bottom:6px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);"
     >🔗</button>`;
   const popupHtml = `
     <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;">
       <div><b>${ev.title}</b></div>
       <div>${ev.location}</div>
-      <div style="color:#666">${ev.date}</div>
+      <div style="color:var(--text-1)">${ev.date}</div>
       ${shareBtnHtml}
     </div>
   `;
@@ -198,8 +198,11 @@ fetch(JSON_URL).then(r=>r.json()).then(events=>{
     upcoming.forEach(e=>{
       const d=document.createElement('div');
       d.className='item';
+      d.dataset.eventId = e.id;
       d.innerHTML=`<strong>${e.title}</strong><br>${e.location}<br><i>${e.date}</i>`;
       d.onclick=()=>{
+        upDiv.querySelectorAll('.item.is-active').forEach(el=>el.classList.remove('is-active'));
+        d.classList.add('is-active');
         render(e.date);
         setTimeout(()=>{
           const m = markers.find(mk => {
@@ -250,6 +253,11 @@ fetch(JSON_URL).then(r=>r.json()).then(events=>{
             m.openPopup();
           }
         }
+        const sel = upDiv && upDiv.querySelector(`[data-event-id="${target.id}"]`);
+        if (sel){
+          upDiv.querySelectorAll('.item.is-active').forEach(el=>el.classList.remove('is-active'));
+          sel.classList.add('is-active');
+        }
       }, 150);
     }
   }
@@ -264,12 +272,13 @@ fetch(JSON_URL).then(r=>r.json()).then(events=>{
 // ===== UI: Бургер / Закрыть =====
 const sidebar=document.getElementById('sidebar');
 const burger=document.getElementById('burger');
+const logo=document.getElementById('logo');
 const closeBtn=document.getElementById('closeSidebar');
 burger.onclick=()=>sidebar.classList.toggle('open');
 closeBtn.onclick=()=>sidebar.classList.remove('open');
 
 document.addEventListener('click', e => {
-  if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== burger) {
+  if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== burger && e.target !== logo) {
     sidebar.classList.remove('open');
   }
 });
