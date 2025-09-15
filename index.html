@@ -1,94 +1,114 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru" data-theme="minimal">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MeowTest🔨</title>
+  <title>Meow Records — карта событий</title>
 
-  <!-- Стили внешних библиотек -->
-  <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
-  <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
-  <link href="assets/css/theme.css" rel="stylesheet"/>
+  <!-- Подключаем стили MapLibre и тему -->
+  <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet">
+  <link href="assets/css/theme.css" rel="stylesheet">
 
   <style>
-    /* ===== Базовая раскладка ===== */
-    html,body{height:100%;}
-    body{
-      margin:0; display:flex; flex-direction:column;
-      height:100vh; height:100svh; height:100dvh;
-      background:var(--surface-0); color:var(--text-0); font-family:var(--font-ui);
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      height: 100svh;
+      height: 100dvh;
+      background: var(--surface-0);
+      color: var(--text-0);
+      font-family: var(--font-ui);
     }
-    #controls{
-      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
-      padding:12px; background:var(--surface-1); border-bottom:var(--border);
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px;
+      background: var(--surface-1);
+      border-bottom: var(--border);
     }
-    #layout{flex:1; display:flex;}
-    #map{flex:1; width:100%; height:100%;}
-    input[type=date]{font-size:16px; flex:0 0 160px;}
-    #logo{ height:40px; max-width:100%; cursor:pointer; }
-    #burger{ cursor:pointer; font-size:22px; color:var(--text-0); margin-left:auto; }
+    #layout { flex: 1; display: flex; }
+    #map { flex: 1; width: 100%; height: 100%; }
+    input[type="date"] { font-size: 16px; flex: 0 0 160px; }
+    #logo { height: 40px; max-width: 100%; cursor: pointer; }
+    #burger { cursor: pointer; font-size: 22px; color: var(--text-0); margin-left: auto; user-select: none; }
+    #burger:focus-visible, #closeSidebar:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
 
-    /* ===== Сайдбар: список событий ===== */
-    #sidebar{
-      position:fixed; right:0; top:0; height:100%; width:320px;
-      background:var(--surface-1); border-left:var(--border); box-shadow:var(--shadow-sm);
-      padding:12px; padding-bottom:56px; font-size:14px; overflow-y:auto;
-      transform:translateX(100%); transition:transform .3s; z-index:999;
+    /* Сайдбар со списком событий */
+    #sidebar {
+      position: fixed;
+      right: 0;
+      top: 0;
+      height: 100%;
+      width: 320px;
+      background: var(--surface-1);
+      border-left: var(--border);
+      box-shadow: var(--shadow-sm);
+      padding: 12px;
+      padding-bottom: 56px;
+      font-size: 14px;
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform .3s;
+      z-index: 999;
     }
-    #sidebar.open{ transform:translateX(0); }
-    #sidebar .item{ margin-bottom:12px; cursor:pointer; padding:8px; border-bottom:var(--border); border-radius:var(--radius-sm); transition:background var(--fx-fast), transform var(--fx-fast); }
-    #sidebar .item:hover{ background:var(--surface-2); }
-    #sidebar .item.is-active{ outline:2px solid color-mix(in srgb, var(--brand) 55%, transparent); border-radius:var(--radius-sm); }
-    .sidebar-footer{ position:sticky; bottom:0; background:var(--surface-1); padding:8px; border-top:var(--border); }
+    #sidebar.open { transform: translateX(0); }
+    #sidebar .item {
+      margin-bottom: 12px;
+      cursor: pointer;
+      padding: 8px;
+      border-bottom: var(--border);
+      border-radius: var(--radius-sm);
+      transition: background var(--fx-fast), transform var(--fx-fast);
+    }
+    #sidebar .item:hover { background: var(--surface-2); }
+    #sidebar .item.is-active { outline: 2px solid color-mix(in srgb, var(--brand) 55%, transparent); border-radius: var(--radius-sm); }
+    .sidebar-footer {
+      position: sticky;
+      bottom: 0;
+      background: var(--surface-1);
+      padding: 8px;
+      border-top: var(--border);
+    }
 
-    @media (max-width:768px){
-      #layout{flex-direction:column;}
-      #logo{ height:28px; }
-      #sidebar{ width:80%; max-width:320px; }
+    @media (max-width: 768px) {
+      #layout { flex-direction: column; }
+      #logo { height: 28px; }
+      #sidebar { width: 80%; max-width: 320px; }
     }
   </style>
 </head>
 <body>
-  <!-- ===== Панель управления ===== -->
   <div id="controls">
     <label for="event-date"><span aria-hidden="true">📅</span> Дата:</label>
     <input type="date" id="event-date">
     <img id="logo" src="https://thumbs.dreamstime.com/b/cat-builder-holding-drill-white-background-cat-builder-drill-123551503.jpg" alt="Meow Records">
-    <span id="burger" aria-label="Открыть сайдбар" role="button">☰</span>
+    <span id="burger" aria-label="Открыть список событий" role="button" tabindex="0">☰</span>
   </div>
 
-  <!-- ===== Карта ===== -->
   <div id="layout">
-    <div id="map"></div>
+    <div id="map" role="application" aria-label="Карта событий"></div>
   </div>
 
-  <!-- ===== Сайдбар ===== -->
-  <div id="sidebar">
+  <aside id="sidebar" aria-label="Список событий">
     <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h3 style="margin:0;">Ближайшие мероприятия</h3>
-      <span id="closeSidebar" aria-label="Закрыть сайдбар" role="button">✕</span>
+      <h3 style="margin:0;">События</h3>
+      <span id="closeSidebar" aria-label="Закрыть список" role="button" tabindex="0">×</span>
     </div>
     <hr>
     <div id="upcoming"></div>
-    <div class="sidebar-footer"><button id="toggleArchive" class="btn" type="button">Архив</button></div>
-  </div>
+    <div class="sidebar-footer">
+      <button id="toggleArchive" class="btn" type="button">Архив</button>
+    </div>
+  </aside>
 
-  <!-- ===== Скрипты ===== -->
+  <!-- Скрипты -->
   <script defer src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
-  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="script.js"></script>
   <script defer src="assets/js/theme.js"></script>
-  <script>
-    // Правка текста кнопки Архив/Назад на случай проблем с кодировкой
-    document.addEventListener('DOMContentLoaded', function(){
-      const btn = document.getElementById('toggleArchive');
-      if(btn){
-        btn.textContent = 'Архив';
-        btn.addEventListener('click', ()=>{
-          btn.textContent = (btn.textContent === 'Архив') ? 'Назад' : 'Архив';
-        });
-      }
-    });
-  </script>
 </body>
 </html>

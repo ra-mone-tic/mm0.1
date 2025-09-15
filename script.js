@@ -1,24 +1,15 @@
-﻿// ===== MeowMap: логика карты и событий =====
-// Источники данных, карта, маркеры/попапы, список событий и сайдбар
+// ===== MeowMap: карта событий =====
+// MapLibre + список событий
 
-// ===== РљРћРќРЎРўРђРќРўР«/РќРђРЎРўР РћР™РљР =====
-// Р—Р°РіСЂСѓР¶Р°РµРј СЃРїРёСЃРѕРє СЃРѕР±С‹С‚РёР№ Р±РµР· РїР°СЂР°РјРµС‚СЂР° РґР»СЏ РїСЂРёРЅСѓРґРёС‚РµР»СЊРЅРѕРіРѕ РѕР±РЅРѕРІР»РµРЅРёСЏ,
-// С‡С‚РѕР±С‹ Р±СЂР°СѓР·РµСЂ РјРѕРі РєСЌС€РёСЂРѕРІР°С‚СЊ РґР°РЅРЅС‹Рµ Рё СѓСЃРєРѕСЂСЏС‚СЊ РїРѕРІС‚РѕСЂРЅС‹Рµ Р·Р°РіСЂСѓР·РєРё.
 const JSON_URL = 'events.json';
-
-// РљРѕРѕСЂРґРёРЅР°С‚С‹ РіСЂР°РЅРёС† РљР°Р»РёРЅРёРЅРіСЂР°РґСЃРєРѕР№ РѕР±Р»Р°СЃС‚Рё
-// [minLng, minLat, maxLng, maxLat]
 const REGION_BBOX = [19.30, 54.00, 23.10, 55.60];
 
-// ===== РљРђР РўРђ =====
-const MAP_OPTS = {
+const MAP_OPTIONS = {
   container: 'map',
-  // Р’РђР–РќРћ: РёСЃРїРѕР»СЊР·СѓРµРј СЂР°СЃС‚СЂРѕРІС‹Рµ С‚Р°Р№Р»С‹ CARTO Positron Рё РѕРіСЂР°РЅРёС‡РёРІР°РµРј Р·Р°РїСЂРѕСЃС‹
-  // РіСЂР°РЅРёС†Р°РјРё СЂРµРіРёРѕРЅР° вЂ” РёРЅР°С‡Рµ РєР°СЂС‚Р° Р±СѓРґРµС‚ РіСЂСѓР·РёС‚СЊСЃСЏ РѕС‡РµРЅСЊ РјРµРґР»РµРЅРЅРѕ
   style: {
     version: 8,
     sources: {
-      'positron': {
+      positron: {
         type: 'raster',
         tiles: [
           'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
@@ -46,259 +37,253 @@ const MAP_OPTS = {
   renderWorldCopies: false
 };
 
-let map;
-let isMapLibre = false;
-// Р‘С‹СЃС‚СЂР°СЏ РєР°СЂС‚Р° СЃРѕРѕС‚РІРµС‚СЃС‚РІРёСЏ id -> marker РґР»СЏ РѕС‚РєСЂС‹С‚РёСЏ РїРѕРїР°РїРѕРІ РїРѕ СЃСЃС‹Р»РєРµ
+const mapContainer = document.getElementById('map');
+if (!window.maplibregl || !maplibregl.supported()) {
+  mapContainer.innerHTML = '<p style="padding:16px;">MapLibre требует поддержки WebGL. Обновите браузер или включите аппаратное ускорение.</p>';
+  throw new Error('MapLibre is not supported in this environment');
+}
+
+const map = new maplibregl.Map(MAP_OPTIONS);
+
+let styleErrorShown = false;
+map.on('error', event => {
+  if (styleErrorShown) return;
+  styleErrorShown = true;
+  console.error('Map style load error', event.error);
+});
+
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
+map.addControl(new maplibregl.GeolocateControl({
+  positionOptions: { enableHighAccuracy: true },
+  showUserLocation: true
+}), 'top-right');
+
+map.dragRotate.disable();
+map.touchZoomRotate.disableRotation();
+
+function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+const resizeMap = debounce(() => map.resize(), 120);
+map.on('load', () => setTimeout(resizeMap, 120));
+window.addEventListener('resize', resizeMap);
+
+const markers = [];
 const markerById = new Map();
 
-if (maplibregl && maplibregl.supported()) {
-  isMapLibre = true;
-  map = new maplibregl.Map(MAP_OPTS);
-
-  let styleErrorShown = false;
-  map.on('error', e => {
-    if (styleErrorShown) return;
-    styleErrorShown = true;
-    console.error('Map style load error', e.error);
-  });
-
-  map.addControl(new maplibregl.NavigationControl(), 'top-right');
-  map.addControl(new maplibregl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true },
-    showUserLocation: true
-  }), 'top-right');
-
-  map.dragRotate.disable();
-  map.touchZoomRotate.disableRotation();
-} else {
-  // Р¤РѕР»Р±СЌРє РЅР° Leaflet РїСЂРё РѕС‚СЃСѓС‚СЃС‚РІРёРё WebGL
-  const bounds = [[REGION_BBOX[1], REGION_BBOX[0]], [REGION_BBOX[3], REGION_BBOX[2]]];
-  map = L.map('map', { maxBounds: bounds }).setView([MAP_OPTS.center[1], MAP_OPTS.center[0]], MAP_OPTS.zoom);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-    maxZoom: MAP_OPTS.maxZoom,
-    bounds: bounds,
-    noWrap: true,
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-  }).addTo(map);
-}
-
-// РЈСЃРєРѕСЂРµРЅРёРµ РѕС‚СЂРёСЃРѕРІРєРё РєР°СЂС‚С‹
-// helper РґР»СЏ РєРѕРЅС‚СЂРѕР»СЏ С‡Р°СЃС‚РѕС‚С‹ РІС‹Р·РѕРІРѕРІ
-function debounce(fn, delay) {
-  let t;
-  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
-}
-
-const resizeMap = debounce(() => {
-  if (isMapLibre) map.resize(); else map.invalidateSize();
-}, 100);
-
-if (isMapLibre) {
-  map.on('load', () => { setTimeout(resizeMap, 100); });
-} else {
-  setTimeout(resizeMap, 100);
-}
-
-// ===== РњРђР РљР•Р Р« =====
-let markers = [];
 function clearMarkers() {
-  if (isMapLibre) {
-    markers.forEach(m => m.remove());
-  } else {
-    markers.forEach(m => map.removeLayer(m));
-  }
-  markers = [];
+  markers.forEach(marker => marker.remove());
+  markers.length = 0;
   markerById.clear();
 }
-function addMarker(ev) {
-  // HTML РїРѕРїР°РїР° СЃ РєРѕРјРїР°РєС‚РЅРѕР№ РєРЅРѕРїРєРѕР№ В«РїРѕРґРµР»РёС‚СЊСЃСЏВ» РІРЅРёР·Сѓ СЃРїСЂР°РІР°
-  const shareBtnHtml = `<button
-      class="share-btn"
+
+function popupTemplate(event) {
+  const shareButton = `
+    <button class="share-btn"
+      type="button"
       title="Скопировать ссылку"
-      onclick="copyShareLink('${ev.id}')"
+      onclick="copyShareLink('${event.id}')"
       style="position:absolute;right:8px;bottom:6px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);"
     >🔗</button>`;
-  const popupHtml = `
+
+  return `
     <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;">
-      <div><b>${ev.title}</b></div>
-      <div>${ev.location}</div>
-      <div style="color:var(--text-1)">${ev.date}</div>
-      ${shareBtnHtml}
+      <div><strong>${event.title}</strong></div>
+      <div>${event.location}</div>
+      <div style="color:var(--text-1);">${event.date}</div>
+      ${shareButton}
     </div>
   `;
-  if (isMapLibre) {
-    const pop = new maplibregl.Popup({ offset: 25 }).setHTML(popupHtml);
-    const m = new maplibregl.Marker().setLngLat([ev.lon, ev.lat]).setPopup(pop).addTo(map);
-    markers.push(m);
-    markerById.set(ev.id, m);
-  } else {
-    const m = L.marker([ev.lat, ev.lon]).addTo(map).bindPopup(popupHtml);
-    markers.push(m);
-    markerById.set(ev.id, m);
+}
+
+function addMarker(event) {
+  const popup = new maplibregl.Popup({ offset: 24, closeButton: false }).setHTML(popupTemplate(event));
+  const marker = new maplibregl.Marker().setLngLat([event.lon, event.lat]).setPopup(popup).addTo(map);
+  markers.push(marker);
+  markerById.set(event.id, marker);
+}
+
+function makeEventId(event) {
+  const source = `${event.date}|${event.title}|${event.lat}|${event.lon}`;
+  let hash = 5381;
+  for (let i = 0; i < source.length; i += 1) {
+    hash = ((hash << 5) + hash) + source.charCodeAt(i);
   }
+  return `e${(hash >>> 0).toString(16)}`;
 }
 
-// ===== Р”РђРќРќР«Р• Р Р Р•РќР”Р•Р  =====
-// РЎС‚Р°Р±РёР»СЊРЅС‹Р№ id СЃРѕР±С‹С‚РёСЏ (С…СЌС€ djb2 -> hex)
-function makeEventId(e){
-  const s = `${e.date}|${e.title}|${e.lat}|${e.lon}`;
-  let h = 5381;
-  for (let i=0;i<s.length;i++) h = ((h<<5)+h) + s.charCodeAt(i);
-  const hex = (h>>>0).toString(16);
-  return `e${hex}`;
-}
-
-// Р“Р»РѕР±Р°Р»СЊРЅС‹Р№ РѕР±СЂР°Р±РѕС‚С‡РёРє РґР»СЏ РєРЅРѕРїРєРё В«РїРѕРґРµР»РёС‚СЊСЃСЏВ» (Р±РµР· РІСЃРїР»С‹РІР°СЋС‰РёС… РѕРєРѕРЅ)
-window.copyShareLink = async function(id){
+window.copyShareLink = async function copyShareLink(id) {
   const url = new URL(window.location.href);
   url.searchParams.set('event', id);
   const shareUrl = url.toString();
-  try{
-    if (navigator.clipboard && navigator.clipboard.writeText){
+
+  try {
+    if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(shareUrl);
     } else {
-      const ta = document.createElement('textarea');
-      ta.value = shareUrl;
-      ta.style.position='fixed'; ta.style.opacity='0';
-      document.body.appendChild(ta); ta.select();
+      const textarea = document.createElement('textarea');
+      textarea.value = shareUrl;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
       document.execCommand('copy');
-      document.body.removeChild(ta);
+      document.body.removeChild(textarea);
     }
-  }catch(e){
-    console.error('РќРµ СѓРґР°Р»РѕСЃСЊ СЃРєРѕРїРёСЂРѕРІР°С‚СЊ СЃСЃС‹Р»РєСѓ', e);
+  } catch (error) {
+    console.error('Не удалось скопировать ссылку', error);
   }
 };
 
-fetch(JSON_URL).then(r=>r.json()).then(events=>{
-  events.sort((a,b)=>a.date.localeCompare(b.date));
-  // РќР°Р·РЅР°С‡Р°РµРј id РІСЃРµРј СЃРѕР±С‹С‚РёСЏРј
-  events.forEach(e=>{ e.id = makeEventId(e); });
-
-  const input=document.getElementById('event-date');
-  input.min=events[0].date; input.max=events[events.length-1].date;
-
-  const today=new Date().toISOString().slice(0,10);
-  const first=events.find(e=>e.date>=today)?today:events[0].date;
-  input.value=first;
-
-  function render(dateStr){
-    clearMarkers();
-    const todays=events.filter(e=>e.date===dateStr);
-    todays.forEach(addMarker);    if(todays.length){
-      if(isMapLibre) map.flyTo({center:[todays[0].lon,todays[0].lat],zoom:12});
-      else map.setView([todays[0].lat,todays[0].lon],12);
+fetch(JSON_URL)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
     }
-  }
-
-    // === Списки событий: ближайшие и архив ===
-  const upcoming = events.filter(e=>new Date(e.date) >= new Date(today));
-  const archive = events.filter(e=>new Date(e.date) < new Date(today));
-  const upDiv = document.getElementById('upcoming');
-  const archiveBtn = document.getElementById('toggleArchive');
-  let showingArchive = false;
-
-  // Универсальная отрисовка списка событий (для ближайших и архива)
-  function renderList(list){
-    upDiv.innerHTML = '';
-    if(!list.length){
-      upDiv.textContent = showingArchive ? 'Архив пуст' : 'Нет ближайших событий';
+    return response.json();
+  })
+  .then(events => {
+    if (!Array.isArray(events) || events.length === 0) {
+      const wrapper = document.getElementById('upcoming');
+      wrapper.textContent = 'Список событий пуст';
+      document.getElementById('event-date').disabled = true;
       return;
     }
-    list.forEach(e=>{
-      const d = document.createElement('div');
-      d.className = 'item';
-      d.dataset.eventId = e.id;
-      d.innerHTML = `<strong>${e.title}</strong><br>${e.location}<br><i>${e.date}</i>`;
-      d.onclick = ()=>{
-        // Подсветка активного элемента
-        upDiv.querySelectorAll('.item.is-active').forEach(el=>el.classList.remove('is-active'));
-        d.classList.add('is-active');
-        // Перейти к дате события и показать попап
-        render(e.date);
-        setTimeout(()=>{
-          const m = markers.find(mk => {
-            if(isMapLibre){ const p = mk.getLngLat(); return Math.abs(p.lat - e.lat) < 1e-5 && Math.abs(p.lng - e.lon) < 1e-5; }
-            else { const p = mk.getLatLng(); return Math.abs(p.lat - e.lat) < 1e-5 && Math.abs(p.lng - e.lon) < 1e-5; }
-          });
-          if (m) {
-            if(isMapLibre){ map.flyTo({center:[e.lon,e.lat],zoom:14}); m.togglePopup(); }
-            else { map.setView([e.lat,e.lon],14); m.openPopup(); }
-          }
-          document.getElementById('sidebar').classList.remove('open');
-        },100);
-      };
-      upDiv.appendChild(d);
-    });
-  }
 
-  // Стартовый список — ближайшие события
-  renderList(upcoming);
-
-  // Переключатель списка: Архив <-> Ближайшие
-  if (archiveBtn){
-    archiveBtn.addEventListener('click', ()=>{
-      showingArchive = !showingArchive;
-      archiveBtn.textContent = showingArchive ? 'Назад' : 'Архив';
-      renderList(showingArchive ? archive : upcoming);
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    events.forEach(event => {
+      event.id = makeEventId(event);
     });
-  }  render(first);
-  input.onchange=ev=>{
-    const d=new Date(ev.target.value).toISOString().slice(0,10);
-    render(d);
-  };
-  // РћС‚РєСЂС‹С‚СЊ РїРѕРїР°Рї РїРѕ РїР°СЂР°РјРµС‚СЂСѓ ?event=ID
-  const urlParams = new URLSearchParams(window.location.search);
-  const targetId = urlParams.get('event');
-  if (targetId){
-    const target = events.find(e=>e.id===targetId);
-    if (target){
-      if (input.value !== target.date) render(target.date);
-      setTimeout(()=>{
-        const m = markerById.get(target.id);
-        if (m){
-          if (isMapLibre){
-            map.flyTo({center:[target.lon,target.lat],zoom:14});
-            m.togglePopup();
-          } else {
-            map.setView([target.lat,target.lon],14);
-            m.openPopup();
-          }
-        }
-        const sel = upDiv && upDiv.querySelector(`[data-event-id="${target.id}"]`);
-        if (sel){
-          upDiv.querySelectorAll('.item.is-active').forEach(el=>el.classList.remove('is-active'));
-          sel.classList.add('is-active');
-        }
-      }, 150);
+
+    const input = document.getElementById('event-date');
+    input.min = events[0].date;
+    input.max = events[events.length - 1].date;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const first = events.find(event => event.date >= today)?.date ?? events[0].date;
+    input.value = first;
+
+    function render(dateStr) {
+      clearMarkers();
+      const todays = events.filter(event => event.date === dateStr);
+      todays.forEach(addMarker);
+      if (todays.length > 0) {
+        map.flyTo({ center: [todays[0].lon, todays[0].lat], zoom: 12 });
+      }
     }
-  }
-}).catch(err=>{
-  console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С…', err);
-  clearMarkers();
-  const upDiv=document.getElementById('upcoming');
-  upDiv.innerHTML='';
-  upDiv.textContent='РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЃРѕР±С‹С‚РёР№';
-});
 
-// ===== UI: сайдбар (бургер, закрытие) =====
-const sidebar=document.getElementById('sidebar');
-const burger=document.getElementById('burger');
-const logo=document.getElementById('logo');
-const closeBtn=document.getElementById('closeSidebar');
-burger.onclick=()=>sidebar.classList.toggle('open');
-closeBtn.onclick=()=>sidebar.classList.remove('open');
+    const upcoming = events.filter(event => new Date(event.date) >= new Date(today));
+    const archive = events.filter(event => new Date(event.date) < new Date(today));
+    const listContainer = document.getElementById('upcoming');
+    const archiveButton = document.getElementById('toggleArchive');
+    let showingArchive = false;
 
-document.addEventListener('click', e => {
-  if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && e.target !== burger && e.target !== logo) {
+    function renderList(list) {
+      listContainer.innerHTML = '';
+      if (!list.length) {
+        listContainer.textContent = showingArchive ? 'Архив пуст' : 'Нет ближайших событий';
+        return;
+      }
+
+      list.forEach(event => {
+        const item = document.createElement('div');
+        item.className = 'item';
+        item.dataset.eventId = event.id;
+        item.innerHTML = `<strong>${event.title}</strong><br>${event.location}<br><i>${event.date}</i>`;
+        item.onclick = () => {
+          listContainer.querySelectorAll('.item.is-active').forEach(el => el.classList.remove('is-active'));
+          item.classList.add('is-active');
+          render(event.date);
+          setTimeout(() => {
+            const marker = markerById.get(event.id);
+            if (marker) {
+              map.flyTo({ center: [event.lon, event.lat], zoom: 14 });
+              marker.togglePopup();
+            }
+            document.getElementById('sidebar').classList.remove('open');
+          }, 120);
+        };
+        listContainer.appendChild(item);
+      });
+    }
+
+    renderList(upcoming);
+    render(first);
+
+    if (archiveButton) {
+      archiveButton.addEventListener('click', () => {
+        showingArchive = !showingArchive;
+        archiveButton.textContent = showingArchive ? 'Назад' : 'Архив';
+        renderList(showingArchive ? archive : upcoming);
+      });
+    }
+
+    input.addEventListener('change', event => {
+      const value = new Date(event.target.value).toISOString().slice(0, 10);
+      render(value);
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetId = urlParams.get('event');
+    if (targetId) {
+      const target = events.find(event => event.id === targetId);
+      if (target) {
+        if (input.value !== target.date) {
+          render(target.date);
+        }
+        setTimeout(() => {
+          const marker = markerById.get(target.id);
+          if (marker) {
+            map.flyTo({ center: [target.lon, target.lat], zoom: 14 });
+            marker.togglePopup();
+          }
+          const selected = listContainer.querySelector(`[data-event-id="${target.id}"]`);
+          if (selected) {
+            listContainer.querySelectorAll('.item.is-active').forEach(el => el.classList.remove('is-active'));
+            selected.classList.add('is-active');
+          }
+        }, 150);
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Ошибка загрузки данных', error);
+    clearMarkers();
+    const wrapper = document.getElementById('upcoming');
+    wrapper.innerHTML = '';
+    wrapper.textContent = 'Ошибка загрузки событий';
+  });
+
+const sidebar = document.getElementById('sidebar');
+const burger = document.getElementById('burger');
+const logo = document.getElementById('logo');
+const closeBtn = document.getElementById('closeSidebar');
+
+const toggleSidebar = () => sidebar.classList.toggle('open');
+const closeSidebar = () => sidebar.classList.remove('open');
+
+burger.addEventListener('click', toggleSidebar);
+closeBtn.addEventListener('click', closeSidebar);
+
+function bindKeyboardActivation(element, handler) {
+  element.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handler();
+    }
+  });
+}
+
+bindKeyboardActivation(burger, toggleSidebar);
+bindKeyboardActivation(closeBtn, closeSidebar);
+
+document.addEventListener('click', event => {
+  if (sidebar.classList.contains('open') && !sidebar.contains(event.target) && event.target !== burger && event.target !== logo) {
     sidebar.classList.remove('open');
   }
 });
-
-
-
-
-
-
-
-
-
