@@ -160,12 +160,18 @@
       flex-direction: column;
       gap: 8px;
       max-height: min(70dvh, 520px);
-      transform: translateY(110%);
-      transition: transform var(--fx-slow);
+      transform: translateY(calc(100% + 32px));
+      opacity: 0;
+      pointer-events: none;
+      transition: transform var(--fx-slow), opacity var(--fx-fast);
       z-index: 950;
       touch-action: pan-y;
     }
-    #search-panel.open { transform: translateY(0); }
+    #search-panel.open {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
     .search-panel__handle {
       width: 46px;
       height: 5px;
