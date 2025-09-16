@@ -1,5 +1,5 @@
 // ===== MeowMap: карта событий =====
-// MapLibre + список событий
+// MapLibre + список событий + нижний поисковый бар
 
 const JSON_URL = 'events.json';
 const REGION_BBOX = [19.30, 54.00, 23.10, 55.60];
@@ -37,6 +37,12 @@ const MAP_OPTIONS = {
   renderWorldCopies: false
 };
 
+const DEVICE_TODAY = new Date().toISOString().slice(0, 10);
+
+function getEventDateLabel(dateStr) {
+  return dateStr === DEVICE_TODAY ? 'Сегодня' : dateStr;
+}
+
 const mapContainer = document.getElementById('map');
 if (!window.maplibregl || !maplibregl.supported()) {
   mapContainer.innerHTML = '<p style="padding:16px;">MapLibre требует поддержки WebGL. Обновите браузер или включите аппаратное ускорение.</p>';
@@ -61,6 +67,38 @@ map.addControl(new maplibregl.GeolocateControl({
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
+const dateInput = document.getElementById('event-date');
+const listContainer = document.getElementById('upcoming');
+const archiveButton = document.getElementById('toggleArchive');
+const sidebar = document.getElementById('sidebar');
+const burger = document.getElementById('burger');
+const logo = document.getElementById('logo');
+const closeBtn = document.getElementById('closeSidebar');
+const bottomBar = document.getElementById('bottomBar');
+const searchInput = document.getElementById('global-search');
+const searchPanel = document.getElementById('search-panel');
+const searchResults = document.getElementById('search-results');
+const searchEmpty = document.getElementById('search-empty');
+const searchLabel = document.getElementById('search-label');
+const searchClear = document.getElementById('search-clear');
+const searchHandle = searchPanel ? searchPanel.querySelector('.search-panel__handle') : null;
+
+let allEvents = [];
+let upcomingEvents = [];
+let archiveEvents = [];
+let showingArchive = false;
+let searchDragStartY = null;
+let searchPanelOpen = false;
+
+function updateBottomBarOffset() {
+  if (!bottomBar) {
+    document.documentElement.style.setProperty('--search-panel-offset', '0px');
+    return;
+  }
+  const offset = bottomBar.offsetHeight;
+  document.documentElement.style.setProperty('--search-panel-offset', `${offset}px`);
+}
+
 function debounce(fn, delay) {
   let timer;
   return (...args) => {
@@ -69,9 +107,14 @@ function debounce(fn, delay) {
   };
 }
 
-const resizeMap = debounce(() => map.resize(), 120);
-map.on('load', () => setTimeout(resizeMap, 120));
-window.addEventListener('resize', resizeMap);
+const resizeViewport = debounce(() => {
+  map.resize();
+  updateBottomBarOffset();
+}, 120);
+
+map.on('load', () => setTimeout(resizeViewport, 120));
+window.addEventListener('resize', resizeViewport);
+updateBottomBarOffset();
 
 const markers = [];
 const markerById = new Map();
@@ -95,7 +138,7 @@ function popupTemplate(event) {
     <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;">
       <div><strong>${event.title}</strong></div>
       <div>${event.location}</div>
-      <div style="color:var(--text-1);">${event.date}</div>
+      <div style="color:var(--text-1);">${getEventDateLabel(event.date)}</div>
       ${shareButton}
     </div>
   `;
@@ -140,137 +183,350 @@ window.copyShareLink = async function copyShareLink(id) {
   }
 };
 
-fetch(JSON_URL)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(events => {
-    if (!Array.isArray(events) || events.length === 0) {
-      const wrapper = document.getElementById('upcoming');
-      wrapper.textContent = 'Список событий пуст';
-      document.getElementById('event-date').disabled = true;
-      return;
-    }
+function renderDay(dateStr, { recenter = true } = {}) {
+  if (!dateStr || !allEvents.length) {
+    clearMarkers();
+    return [];
+  }
 
-    events.sort((a, b) => a.date.localeCompare(b.date));
-    events.forEach(event => {
-      event.id = makeEventId(event);
+  clearMarkers();
+  const todays = allEvents.filter(event => event.date === dateStr);
+  todays.forEach(addMarker);
+
+  if (recenter && todays.length > 0) {
+    map.flyTo({ center: [todays[0].lon, todays[0].lat], zoom: todays.length > 1 ? 12 : 14 });
+  }
+
+  return todays;
+}
+
+function highlightEventInSidebar(eventId, { scroll = true } = {}) {
+  if (!listContainer) return;
+  listContainer.querySelectorAll('.item.is-active').forEach(el => el.classList.remove('is-active'));
+  if (!eventId) return;
+  const target = listContainer.querySelector(`[data-event-id="${eventId}"]`);
+  if (target) {
+    target.classList.add('is-active');
+    if (scroll) {
+      target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+}
+
+function highlightFirstByDate(dateStr) {
+  if (!dateStr) {
+    highlightEventInSidebar(null);
+    return;
+  }
+  const candidate = listContainer?.querySelector(`.item[data-event-date="${dateStr}"]`);
+  if (candidate) {
+    highlightEventInSidebar(candidate.dataset.eventId, { scroll: false });
+  } else {
+    highlightEventInSidebar(null);
+  }
+}
+
+function updateArchiveButtonLabel() {
+  if (!archiveButton) return;
+  archiveButton.textContent = showingArchive ? 'Назад' : 'Архив';
+}
+
+function renderEventList(list) {
+  if (!listContainer) return;
+
+  listContainer.innerHTML = '';
+  if (!list.length) {
+    listContainer.textContent = showingArchive ? 'Архив пуст' : 'Нет ближайших событий';
+    return;
+  }
+
+  list.forEach(event => {
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.dataset.eventId = event.id;
+    item.dataset.eventDate = event.date;
+    item.setAttribute('role', 'button');
+    item.tabIndex = 0;
+    item.innerHTML = `<strong>${event.title}</strong><br>${event.location}<br><i>${getEventDateLabel(event.date)}</i>`;
+
+    const activate = () => {
+      focusEventOnMap(event);
+    };
+
+    item.addEventListener('click', activate);
+    item.addEventListener('keydown', evt => {
+      if (evt.key === 'Enter' || evt.key === ' ') {
+        evt.preventDefault();
+        activate();
+      }
     });
 
-    const input = document.getElementById('event-date');
-    input.min = events[0].date;
-    input.max = events[events.length - 1].date;
+    listContainer.appendChild(item);
+  });
+}
 
-    const today = new Date().toISOString().slice(0, 10);
-    const first = events.find(event => event.date >= today)?.date ?? events[0].date;
-    input.value = first;
+function ensureListForEvent(eventData) {
+  if (!archiveButton) return;
+  const needsArchive = eventData.date < DEVICE_TODAY;
+  if (needsArchive !== showingArchive) {
+    showingArchive = needsArchive;
+    updateArchiveButtonLabel();
+    renderEventList(showingArchive ? archiveEvents : upcomingEvents);
+  }
+}
 
-    function render(dateStr) {
-      clearMarkers();
-      const todays = events.filter(event => event.date === dateStr);
-      todays.forEach(addMarker);
-      if (todays.length > 0) {
-        map.flyTo({ center: [todays[0].lon, todays[0].lat], zoom: 12 });
-      }
+function focusEventOnMap(eventData) {
+  if (!eventData) return;
+
+  if (dateInput) {
+    dateInput.value = eventData.date;
+  }
+
+  renderDay(eventData.date, { recenter: false });
+  highlightEventInSidebar(eventData.id);
+
+  setTimeout(() => {
+    const marker = markerById.get(eventData.id);
+    if (marker) {
+      map.flyTo({ center: [eventData.lon, eventData.lat], zoom: 14 });
+      marker.togglePopup();
     }
+    sidebar?.classList.remove('open');
+  }, 120);
+}
 
-    const upcoming = events.filter(event => new Date(event.date) >= new Date(today));
-    const archive = events.filter(event => new Date(event.date) < new Date(today));
-    const listContainer = document.getElementById('upcoming');
-    const archiveButton = document.getElementById('toggleArchive');
-    let showingArchive = false;
+function renderSearchResults(query = '') {
+  if (!searchResults || !searchEmpty) return;
 
-    function renderList(list) {
-      listContainer.innerHTML = '';
-      if (!list.length) {
-        listContainer.textContent = showingArchive ? 'Архив пуст' : 'Нет ближайших событий';
+  const normalized = query.trim().toLowerCase();
+  searchResults.innerHTML = '';
+
+  if (!allEvents.length) {
+    searchEmpty.textContent = 'Данные загружаются…';
+    searchEmpty.hidden = false;
+    return;
+  }
+
+  let matches;
+  if (!normalized) {
+    matches = upcomingEvents.slice(0, 6);
+    if (!matches.length) {
+      matches = allEvents.slice(0, 6);
+    }
+    if (searchLabel) {
+      searchLabel.textContent = 'Подсказки';
+    }
+  } else {
+    matches = allEvents.filter(event => {
+      const haystack = `${event.title} ${event.location}`.toLowerCase();
+      return haystack.includes(normalized);
+    });
+    if (searchLabel) {
+      searchLabel.textContent = 'Результаты';
+    }
+  }
+
+  if (!matches.length) {
+    searchEmpty.textContent = 'Ничего не найдено';
+    searchEmpty.hidden = false;
+    return;
+  }
+
+  searchEmpty.hidden = true;
+
+  matches.forEach(event => {
+    const item = document.createElement('li');
+    item.dataset.eventId = event.id;
+    item.setAttribute('role', 'option');
+    item.tabIndex = 0;
+    item.innerHTML = `<strong>${event.title}</strong><span>${event.location}</span><span>${getEventDateLabel(event.date)}</span>`;
+
+    const activate = () => {
+      ensureListForEvent(event);
+      focusEventOnMap(event);
+      closeSearchPanel();
+    };
+
+    item.addEventListener('click', activate);
+    item.addEventListener('keydown', evt => {
+      if (evt.key === 'Enter' || evt.key === ' ') {
+        evt.preventDefault();
+        activate();
         return;
       }
-
-      list.forEach(event => {
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.dataset.eventId = event.id;
-        item.innerHTML = `<strong>${event.title}</strong><br>${event.location}<br><i>${event.date}</i>`;
-        item.onclick = () => {
-          listContainer.querySelectorAll('.item.is-active').forEach(el => el.classList.remove('is-active'));
-          item.classList.add('is-active');
-          render(event.date);
-          setTimeout(() => {
-            const marker = markerById.get(event.id);
-            if (marker) {
-              map.flyTo({ center: [event.lon, event.lat], zoom: 14 });
-              marker.togglePopup();
-            }
-            document.getElementById('sidebar').classList.remove('open');
-          }, 120);
-        };
-        listContainer.appendChild(item);
-      });
-    }
-
-    renderList(upcoming);
-    render(first);
-
-    if (archiveButton) {
-      archiveButton.addEventListener('click', () => {
-        showingArchive = !showingArchive;
-        archiveButton.textContent = showingArchive ? 'Назад' : 'Архив';
-        renderList(showingArchive ? archive : upcoming);
-      });
-    }
-
-    input.addEventListener('change', event => {
-      const value = new Date(event.target.value).toISOString().slice(0, 10);
-      render(value);
+      if (evt.key === 'ArrowDown') {
+        evt.preventDefault();
+        const next = item.nextElementSibling || searchResults.firstElementChild;
+        if (next) {
+          next.focus();
+        }
+      }
+      if (evt.key === 'ArrowUp') {
+        evt.preventDefault();
+        const prev = item.previousElementSibling;
+        if (prev) {
+          prev.focus();
+        } else if (searchInput) {
+          searchInput.focus();
+        }
+      }
+      if (evt.key === 'Escape') {
+        closeSearchPanel();
+        searchInput?.focus();
+      }
     });
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const targetId = urlParams.get('event');
-    if (targetId) {
-      const target = events.find(event => event.id === targetId);
-      if (target) {
-        if (input.value !== target.date) {
-          render(target.date);
-        }
-        setTimeout(() => {
-          const marker = markerById.get(target.id);
-          if (marker) {
-            map.flyTo({ center: [target.lon, target.lat], zoom: 14 });
-            marker.togglePopup();
-          }
-          const selected = listContainer.querySelector(`[data-event-id="${target.id}"]`);
-          if (selected) {
-            listContainer.querySelectorAll('.item.is-active').forEach(el => el.classList.remove('is-active'));
-            selected.classList.add('is-active');
-          }
-        }, 150);
+    searchResults.appendChild(item);
+  });
+}
+
+function openSearchPanel() {
+  if (!searchPanel || searchPanelOpen) return;
+  updateBottomBarOffset();
+  searchPanel.classList.add('open');
+  searchPanel.setAttribute('aria-hidden', 'false');
+  searchPanelOpen = true;
+  renderSearchResults(searchInput?.value ?? '');
+  resizeViewport();
+}
+
+function closeSearchPanel({ blur = true } = {}) {
+  if (!searchPanel || !searchPanelOpen) {
+    if (blur && searchInput) {
+      searchInput.blur();
+    }
+    return;
+  }
+  searchPanel.classList.remove('open');
+  searchPanel.setAttribute('aria-hidden', 'true');
+  searchPanelOpen = false;
+  if (blur && searchInput) {
+    searchInput.blur();
+  }
+  resizeViewport();
+}
+
+function toggleSearchClearButton() {
+  if (!searchClear || !searchInput) return;
+  if (searchInput.value.trim()) {
+    searchClear.classList.add('is-visible');
+  } else {
+    searchClear.classList.remove('is-visible');
+  }
+}
+
+if (archiveButton) {
+  archiveButton.addEventListener('click', () => {
+    if (!allEvents.length) return;
+    showingArchive = !showingArchive;
+    updateArchiveButtonLabel();
+    renderEventList(showingArchive ? archiveEvents : upcomingEvents);
+    highlightFirstByDate(dateInput?.value);
+  });
+}
+
+if (dateInput) {
+  dateInput.addEventListener('change', event => {
+    const rawValue = event.target.value;
+    if (!rawValue) return;
+    const normalized = new Date(rawValue).toISOString().slice(0, 10);
+    event.target.value = normalized;
+    renderDay(normalized);
+    highlightFirstByDate(normalized);
+  });
+}
+
+if (searchInput) {
+  searchInput.addEventListener('focus', () => {
+    openSearchPanel();
+    toggleSearchClearButton();
+  });
+  searchInput.addEventListener('input', event => {
+    toggleSearchClearButton();
+    if (searchPanelOpen) {
+      renderSearchResults(event.target.value);
+    }
+  });
+  searchInput.addEventListener('keydown', event => {
+    if (event.key === 'Escape') {
+      closeSearchPanel();
+    }
+    if (event.key === 'ArrowDown') {
+      const firstItem = searchResults?.firstElementChild;
+      if (firstItem) {
+        event.preventDefault();
+        firstItem.focus();
       }
     }
-  })
-  .catch(error => {
-    console.error('Ошибка загрузки данных', error);
-    clearMarkers();
-    const wrapper = document.getElementById('upcoming');
-    wrapper.innerHTML = '';
-    wrapper.textContent = 'Ошибка загрузки событий';
+  });
+}
+
+if (searchClear) {
+  searchClear.addEventListener('click', () => {
+    if (!searchInput) return;
+    searchInput.value = '';
+    toggleSearchClearButton();
+    renderSearchResults('');
+    searchInput.focus();
+  });
+}
+
+if (searchHandle) {
+  searchHandle.addEventListener('click', () => closeSearchPanel());
+}
+
+if (searchPanel) {
+  searchPanel.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'touch') {
+      searchDragStartY = null;
+      return;
+    }
+    if (event.target.closest('#search-results')) {
+      searchDragStartY = null;
+      return;
+    }
+    searchDragStartY = event.clientY;
   });
 
-const sidebar = document.getElementById('sidebar');
-const burger = document.getElementById('burger');
-const logo = document.getElementById('logo');
-const closeBtn = document.getElementById('closeSidebar');
+  searchPanel.addEventListener('pointermove', event => {
+    if (searchDragStartY === null || event.pointerType !== 'touch') return;
+    const delta = event.clientY - searchDragStartY;
+    if (delta > 80) {
+      searchDragStartY = null;
+      closeSearchPanel();
+    }
+  });
 
-const toggleSidebar = () => sidebar.classList.toggle('open');
-const closeSidebar = () => sidebar.classList.remove('open');
+  const resetDrag = () => {
+    searchDragStartY = null;
+  };
+  searchPanel.addEventListener('pointerup', resetDrag);
+  searchPanel.addEventListener('pointercancel', resetDrag);
+}
 
-burger.addEventListener('click', toggleSidebar);
-closeBtn.addEventListener('click', closeSidebar);
+document.addEventListener('pointerdown', event => {
+  if (!searchPanelOpen) return;
+  if (searchPanel?.contains(event.target) || bottomBar?.contains(event.target)) {
+    return;
+  }
+  closeSearchPanel();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && searchPanelOpen) {
+    closeSearchPanel();
+    searchInput?.focus();
+  }
+});
+
+const toggleSidebar = () => sidebar?.classList.toggle('open');
+const closeSidebarPanel = () => sidebar?.classList.remove('open');
+
+burger?.addEventListener('click', toggleSidebar);
+closeBtn?.addEventListener('click', closeSidebarPanel);
 
 function bindKeyboardActivation(element, handler) {
+  if (!element) return;
   element.addEventListener('keydown', event => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -280,10 +536,90 @@ function bindKeyboardActivation(element, handler) {
 }
 
 bindKeyboardActivation(burger, toggleSidebar);
-bindKeyboardActivation(closeBtn, closeSidebar);
+bindKeyboardActivation(closeBtn, closeSidebarPanel);
 
 document.addEventListener('click', event => {
-  if (sidebar.classList.contains('open') && !sidebar.contains(event.target) && event.target !== burger && event.target !== logo) {
-    sidebar.classList.remove('open');
+  if (sidebar?.classList.contains('open') && !sidebar.contains(event.target) && event.target !== burger && event.target !== logo) {
+    closeSidebarPanel();
   }
 });
+
+fetch(JSON_URL)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(events => {
+    if (!Array.isArray(events) || events.length === 0) {
+      if (listContainer) {
+        listContainer.textContent = 'Список событий пуст';
+      }
+      if (dateInput) {
+        dateInput.disabled = true;
+      }
+      if (searchEmpty) {
+        searchEmpty.textContent = 'События не найдены';
+        searchEmpty.hidden = false;
+      }
+      return;
+    }
+
+    events.sort((a, b) => a.date.localeCompare(b.date));
+    events.forEach(event => {
+      event.id = makeEventId(event);
+    });
+
+    allEvents = events;
+    upcomingEvents = events.filter(event => event.date >= DEVICE_TODAY);
+    archiveEvents = events.filter(event => event.date < DEVICE_TODAY);
+
+    if (!upcomingEvents.length && archiveEvents.length) {
+      showingArchive = true;
+    }
+
+    if (dateInput) {
+      dateInput.min = events[0].date;
+      dateInput.max = events[events.length - 1].date;
+      const first = events.find(event => event.date >= DEVICE_TODAY)?.date ?? events[0].date;
+      dateInput.value = first;
+      renderDay(first);
+    }
+
+    updateArchiveButtonLabel();
+    renderEventList(showingArchive ? archiveEvents : upcomingEvents);
+    highlightFirstByDate(dateInput?.value);
+
+    if (searchEmpty) {
+      searchEmpty.textContent = 'Начните вводить запрос';
+      searchEmpty.hidden = false;
+    }
+    renderSearchResults(searchInput?.value ?? '');
+    toggleSearchClearButton();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetId = urlParams.get('event');
+    if (targetId) {
+      const target = allEvents.find(event => event.id === targetId);
+      if (target) {
+        ensureListForEvent(target);
+        focusEventOnMap(target);
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Ошибка загрузки данных', error);
+    clearMarkers();
+    if (listContainer) {
+      listContainer.innerHTML = '';
+      listContainer.textContent = 'Ошибка загрузки событий';
+    }
+    if (dateInput) {
+      dateInput.disabled = true;
+    }
+    if (searchEmpty) {
+      searchEmpty.textContent = 'Не удалось загрузить события';
+      searchEmpty.hidden = false;
+    }
+  });

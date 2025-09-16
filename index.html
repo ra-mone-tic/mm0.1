@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meow Records — карта событий</title>
+  <title>MeowTest🔨 </title>
 
   <!-- Подключаем стили MapLibre и тему -->
   <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet">
@@ -54,7 +54,7 @@
       overflow-y: auto;
       transform: translateX(100%);
       transition: transform .3s;
-      z-index: 999;
+      z-index: 1200;
     }
     #sidebar.open { transform: translateX(0); }
     #sidebar .item {
@@ -67,18 +67,170 @@
     }
     #sidebar .item:hover { background: var(--surface-2); }
     #sidebar .item.is-active { outline: 2px solid color-mix(in srgb, var(--brand) 55%, transparent); border-radius: var(--radius-sm); }
-    .sidebar-footer {
-      position: sticky;
+    #closeSidebar {
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-xs);
+      transition: background var(--fx-fast);
+    }
+    #closeSidebar:hover { background: var(--surface-2); }
+    #closeSidebar:active { transform: translateY(1px); }
+
+    :root { --search-panel-offset: 0px; }
+    #bottomBar {
+      position: fixed;
+      left: 0;
+      right: 0;
       bottom: 0;
+      z-index: 900;
       background: var(--surface-1);
-      padding: 8px;
       border-top: var(--border);
+      box-shadow: 0 -12px 30px rgba(15, 18, 36, 0.1);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+    }
+    #bottomBar .bottom-bar__inner {
+      width: min(680px, 100%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .search-field {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-0);
+      border: var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--fx-fast), border-color var(--fx-fast);
+    }
+    .search-field:focus-within {
+      box-shadow: var(--shadow-md);
+      border-color: color-mix(in srgb, var(--brand) 55%, transparent);
+    }
+    .search-field__icon {
+      color: var(--text-1);
+      font-size: 18px;
+      display: inline-flex;
+    }
+    #global-search {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text-0);
+      font-size: 16px;
+      font-family: inherit;
+      min-width: 0;
+    }
+    #global-search::placeholder { color: var(--text-1); }
+    #search-clear {
+      border: none;
+      background: transparent;
+      color: var(--text-1);
+      font-size: 20px;
+      cursor: pointer;
+      display: none;
+      padding: 2px;
+      line-height: 1;
+    }
+    #search-clear.is-visible { display: inline-flex; }
+
+    #search-panel {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: var(--search-panel-offset);
+      background: var(--surface-1);
+      border-top: var(--border);
+      box-shadow: 0 -18px 38px rgba(15, 18, 36, 0.18);
+      border-top-left-radius: var(--radius-md);
+      border-top-right-radius: var(--radius-md);
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: min(70dvh, 520px);
+      transform: translateY(110%);
+      transition: transform var(--fx-slow);
+      z-index: 950;
+      touch-action: pan-y;
+    }
+    #search-panel.open { transform: translateY(0); }
+    .search-panel__handle {
+      width: 46px;
+      height: 5px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--text-1) 25%, transparent);
+      align-self: center;
+      cursor: grab;
+    }
+    .search-panel__label {
+      margin: 4px 0 0;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-1);
+    }
+    #search-results {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    #search-results li {
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      cursor: pointer;
+      transition: background var(--fx-fast);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    #search-results li:hover { background: var(--surface-2); }
+    #search-results li:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
+      outline-offset: 2px;
+    }
+    #search-results li strong { color: var(--text-0); font-size: 0.95rem; }
+    #search-results li span { color: var(--text-1); font-size: 0.85rem; }
+    .search-panel__empty {
+      margin: 0;
+      padding: 12px;
+      text-align: center;
+      color: var(--text-1);
+      border-radius: var(--radius-sm);
+      background: var(--surface-2);
     }
 
     @media (max-width: 768px) {
       #layout { flex-direction: column; }
       #logo { height: 28px; }
       #sidebar { width: 80%; max-width: 320px; }
+      #bottomBar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
+      .search-field { padding: 8px 12px; }
+      #global-search { font-size: 15px; }
+    }
+    .sidebar-footer {
+      position: sticky;
+      bottom: 0;
+      background: var(--surface-1);
+      padding: 8px;
+      border-top: var(--border);
     }
   </style>
 </head>
@@ -105,6 +257,23 @@
       <button id="toggleArchive" class="btn" type="button">Архив</button>
     </div>
   </aside>
+
+  <div id="bottomBar" role="search">
+    <div class="bottom-bar__inner">
+      <div class="search-field">
+        <span class="search-field__icon" aria-hidden="true">🔍</span>
+        <input type="search" id="global-search" placeholder="Поиск событий и мест" autocomplete="off" enterkeyhint="search" aria-label="Поиск событий и мест">
+        <button type="button" id="search-clear" aria-label="Очистить поиск">×</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="search-panel" aria-hidden="true" role="dialog" aria-label="Результаты поиска">
+    <div class="search-panel__handle" aria-hidden="true"></div>
+    <p id="search-label" class="search-panel__label">Подсказки</p>
+    <ul id="search-results" role="listbox" aria-label="Результаты поиска"></ul>
+    <p id="search-empty" class="search-panel__empty">Загрузка данных…</p>
+  </section>
 
   <!-- Скрипты -->
   <script defer src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
