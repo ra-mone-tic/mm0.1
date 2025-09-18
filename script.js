@@ -82,6 +82,7 @@ const searchEmpty = document.getElementById('search-empty');
 const searchLabel = document.getElementById('search-label');
 const searchClear = document.getElementById('search-clear');
 const searchHandle = searchPanel ? searchPanel.querySelector('.search-panel__handle') : null;
+const copyToast = document.getElementById('copy-toast');
 
 let allEvents = [];
 let upcomingEvents = [];
@@ -89,6 +90,7 @@ let archiveEvents = [];
 let showingArchive = false;
 let searchDragStartY = null;
 let searchPanelOpen = false;
+let copyToastTimer = null;
 
 function updateBottomBarOffset() {
   if (!bottomBar) {
@@ -160,6 +162,21 @@ function makeEventId(event) {
   return `e${(hash >>> 0).toString(16)}`;
 }
 
+function showCopyToast() {
+  if (!copyToast) return;
+  copyToast.hidden = false;
+  copyToast.classList.add('is-visible');
+  window.clearTimeout(copyToastTimer);
+  copyToastTimer = window.setTimeout(() => {
+    copyToast.classList.remove('is-visible');
+    copyToastTimer = window.setTimeout(() => {
+      if (!copyToast.classList.contains('is-visible')) {
+        copyToast.hidden = true;
+      }
+    }, 200);
+  }, 2000);
+}
+
 window.copyShareLink = async function copyShareLink(id) {
   const url = new URL(window.location.href);
   url.searchParams.set('event', id);
@@ -178,6 +195,7 @@ window.copyShareLink = async function copyShareLink(id) {
       document.execCommand('copy');
       document.body.removeChild(textarea);
     }
+    showCopyToast();
   } catch (error) {
     console.error('Не удалось скопировать ссылку', error);
   }

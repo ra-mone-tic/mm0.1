@@ -238,6 +238,27 @@
       padding: 8px;
       border-top: var(--border);
     }
+    #copy-toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      transform: translate(-50%, 16px);
+      background: var(--surface-1);
+      border: var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 14px;
+      color: var(--text-0);
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--fx-fast), transform var(--fx-fast);
+      z-index: 1300;
+    }
+    #copy-toast.is-visible {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
   </style>
 </head>
 <body>
@@ -285,5 +306,7 @@
   <script defer src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
   <script defer src="script.js"></script>
   <script defer src="assets/js/theme.js"></script>
+  <div id="copy-toast" role="status" aria-live="polite" hidden>Ссылка скопирована</div>
+
 </body>
 </html>
