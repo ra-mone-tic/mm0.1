@@ -133,7 +133,6 @@ function clearMarkers() {
 }
 
 function formatLocation(location) {
-  // Убираем город Калининград, если он есть в конце
   if (!location) return '';
   return location.replace(/,?\s*Калининград\s*$/i, '');
 }
@@ -300,7 +299,7 @@ function renderEventList(list) {
     item.dataset.eventDate = event.date;
     item.setAttribute('role', 'button');
     item.tabIndex = 0;
-    item.innerHTML = `<strong>${event.title}</strong><br>${event.location}<br><i>${getEventDateLabel(event.date)}</i>`;
+    item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
 
     const activate = () => {
       focusEventOnMap(event);
@@ -313,7 +312,6 @@ function renderEventList(list) {
         activate();
       }
     });
-
     listContainer.appendChild(item);
   });
 }

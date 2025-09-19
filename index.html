@@ -241,7 +241,7 @@
     #copy-toast {
       position: fixed;
       left: 16px;
-      bottom: calc(16px + env(safe-area-inset-bottom));
+      bottom: calc(56px + 24px + env(safe-area-inset-bottom)); /* 24px — небольшой отступ */
       transform: translate(0, 16px);
       background: var(--surface-1);
       border: var(--border);
