@@ -40,7 +40,12 @@ const MAP_OPTIONS = {
 const DEVICE_TODAY = new Date().toISOString().slice(0, 10);
 
 function getEventDateLabel(dateStr) {
-  return dateStr === DEVICE_TODAY ? 'Сегодня' : dateStr;
+  if (dateStr === DEVICE_TODAY) return 'Сегодня';
+  if (!dateStr) return '';
+  // Преобразуем yyyy-mm-dd в dd.mm.yyyy
+  const m = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+  return dateStr;
 }
 
 const mapContainer = document.getElementById('map');
@@ -127,6 +132,12 @@ function clearMarkers() {
   markerById.clear();
 }
 
+function formatLocation(location) {
+  // Убираем город Калининград, если он есть в конце
+  if (!location) return '';
+  return location.replace(/,?\s*Калининград\s*$/i, '');
+}
+
 function popupTemplate(event) {
   const shareButton = `
     <button class="share-btn"
@@ -136,11 +147,22 @@ function popupTemplate(event) {
       style="position:absolute;right:8px;bottom:6px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);"
     >🔗</button>`;
 
+  // Текст поста (без хештегов)
+  let postText = event.text || '';
+  postText = postText.replace(/#[^\s#]+/g, '').trim();
+  const shortText = postText.length > 180 ? postText.slice(0, 180) + '…' : postText;
+  const expandable = postText.length > 180;
+
   return `
-    <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;">
+    <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;">
       <div><strong>${event.title}</strong></div>
-      <div>${event.location}</div>
+      <div>${formatLocation(event.location)}</div>
       <div style="color:var(--text-1);">${getEventDateLabel(event.date)}</div>
+      <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow:hidden;position:relative;">
+        <span class="popup-text-short">${shortText}</span>
+        ${expandable ? `<span class="popup-text-expand" style="color:var(--brand);cursor:pointer;">Развернуть</span>` : ''}
+      </div>
+      <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText}</div>
       ${shareButton}
     </div>
   `;
@@ -151,6 +173,19 @@ function addMarker(event) {
   const marker = new maplibregl.Marker().setLngLat([event.lon, event.lat]).setPopup(popup).addTo(map);
   markers.push(marker);
   markerById.set(event.id, marker);
+  // popup expand/collapse logic
+  popup.on('open', () => {
+    const popupEl = popup.getElement();
+    if (!popupEl) return;
+    const expandBtn = popupEl.querySelector('.popup-text-expand');
+    if (expandBtn) {
+      expandBtn.onclick = () => {
+        popupEl.querySelector('.popup-text-short').style.display = 'none';
+        expandBtn.style.display = 'none';
+        popupEl.querySelector('.popup-text-full').style.display = 'block';
+      };
+    }
+  });
 }
 
 function makeEventId(event) {
