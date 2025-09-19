@@ -111,6 +111,23 @@ html[data-theme="amoled"] input[type="date"]{
   border-left-color:var(--surface-1) !important;
   margin-right:-1px;
 }
+.popup-text-handle {
+  width: 38px;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-1) 25%, transparent);
+  margin: 10px auto 0 auto;
+  cursor: pointer;
+  transition: background 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.popup-text-handle:hover {
+  background: var(--brand);
+}
+.popup-text-full {
+  max-height: 160px;
+  overflow: auto;
+}
 
 /* 4) Scrollbar (webkit) */
 *::-webkit-scrollbar{ width:10px; height:10px; }

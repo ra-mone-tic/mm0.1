@@ -146,11 +146,19 @@ function popupTemplate(event) {
       style="position:absolute;right:8px;bottom:6px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);"
     >🔗</button>`;
 
-  // Текст поста (без хештегов)
+  // Текст поста (без хештегов, даты и заголовка)
   let postText = event.text || '';
   postText = postText.replace(/#[^\s#]+/g, '').trim();
-  const shortText = postText.length > 180 ? postText.slice(0, 180) + '…' : postText;
-  const expandable = postText.length > 180;
+  postText = postText.replace(/^.*\n/, '').trim();
+
+  // Показываем только первые 90 символов в свернутом виде
+  const COLLAPSED_LIMIT = 90;
+  const isLong = postText.length > COLLAPSED_LIMIT;
+  const shortText = isLong ? postText.slice(0, COLLAPSED_LIMIT) : postText;
+
+  // Полоска-ручка для разворота и сворачивания
+  const expandHandle = isLong ? '<div class="popup-text-handle popup-text-expand"></div>' : '';
+  const collapseHandle = isLong ? '<div class="popup-text-handle popup-text-collapse" style="display:none;"></div>' : '';
 
   return `
     <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;">
@@ -158,10 +166,10 @@ function popupTemplate(event) {
       <div>${formatLocation(event.location)}</div>
       <div style="color:var(--text-1);">${getEventDateLabel(event.date)}</div>
       <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow:hidden;position:relative;">
-        <span class="popup-text-short">${shortText}</span>
-        ${expandable ? `<span class="popup-text-expand" style="color:var(--brand);cursor:pointer;">Развернуть</span>` : ''}
+        <span class="popup-text-short">${shortText}${isLong ? '…' : ''}</span>
+        ${expandHandle}
       </div>
-      <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText}</div>
+      <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText.replace(/\n/g, '<br>')}${collapseHandle}</div>
       ${shareButton}
     </div>
   `;
@@ -173,17 +181,48 @@ function addMarker(event) {
   markers.push(marker);
   markerById.set(event.id, marker);
   // popup expand/collapse logic
+  let popupState = { expanded: false };
+  function setCollapsed(popupEl) {
+    const shortText = popupEl.querySelector('.popup-text-short');
+    const fullText = popupEl.querySelector('.popup-text-full');
+    const expandHandle = popupEl.querySelector('.popup-text-expand');
+    const collapseHandle = popupEl.querySelector('.popup-text-collapse');
+    if (shortText && fullText && expandHandle && collapseHandle) {
+      shortText.style.display = 'inline';
+      expandHandle.style.display = 'block';
+      fullText.style.display = 'none';
+      collapseHandle.style.display = 'none';
+      popupState.expanded = false;
+    }
+  }
+  function setExpanded(popupEl) {
+    const shortText = popupEl.querySelector('.popup-text-short');
+    const fullText = popupEl.querySelector('.popup-text-full');
+    const expandHandle = popupEl.querySelector('.popup-text-expand');
+    const collapseHandle = popupEl.querySelector('.popup-text-collapse');
+    if (shortText && fullText && expandHandle && collapseHandle) {
+      shortText.style.display = 'none';
+      expandHandle.style.display = 'none';
+      fullText.style.display = 'block';
+      collapseHandle.style.display = 'block';
+      popupState.expanded = true;
+    }
+  }
   popup.on('open', () => {
     const popupEl = popup.getElement();
     if (!popupEl) return;
-    const expandBtn = popupEl.querySelector('.popup-text-expand');
-    if (expandBtn) {
-      expandBtn.onclick = () => {
-        popupEl.querySelector('.popup-text-short').style.display = 'none';
-        expandBtn.style.display = 'none';
-        popupEl.querySelector('.popup-text-full').style.display = 'block';
-      };
+    const expandHandle = popupEl.querySelector('.popup-text-expand');
+    const collapseHandle = popupEl.querySelector('.popup-text-collapse');
+    setCollapsed(popupEl);
+    if (expandHandle && collapseHandle) {
+      expandHandle.onclick = () => setExpanded(popupEl);
+      collapseHandle.onclick = () => setCollapsed(popupEl);
     }
+  });
+  popup.on('close', () => {
+    const popupEl = popup.getElement();
+    if (!popupEl) return;
+    setCollapsed(popupEl);
   });
 }
 
