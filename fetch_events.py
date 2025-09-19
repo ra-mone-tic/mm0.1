@@ -161,7 +161,7 @@ def extract(text: str):
     first_line = text.split('\n', 1)[0]
     title = re.sub(r"^\s*\d{2}\.\d{2}\s*\|\s*", "", first_line).strip()
 
-    return dict(title=title, date=date, location=loc)
+    return dict(title=title, date=date, location=loc, text=text)
 
 def _log(addr: str, provider: str, ok: bool, detail: str = ""):
     print(f"[{provider:9}] {'OK ' if ok else 'N/A'} | {addr} {('→ ' + detail) if detail else ''}")
@@ -238,7 +238,7 @@ def main():
     print(f"С координатами: {len(df)} | без координат: {bad_cnt}")
 
     # ─────────── СОХРАНЕНИЕ ───────────
-    df = df[["title","date","location","lat","lon"]].sort_values("date")
+    df = df[["title","date","location","lat","lon","text"]].sort_values("date")
     OUTPUT_JSON.write_text(
         df.to_json(orient="records", force_ascii=False, indent=2),
         encoding="utf-8"
