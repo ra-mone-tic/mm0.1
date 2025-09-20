@@ -137,10 +137,11 @@ html[data-theme="amoled"] input[type="date"]{
 /* 5) Themes (A–F) */
 /* A) Minimal / Моно-минимал */
 html[data-theme="minimal"]{
-  --surface-0:#ffffff; --surface-1:#f8f9fb; --surface-2:#eef1f5;
+  --surface-0:#ffffff; --surface-1:#f9c5ff6f; --surface-2:#eef1f5;
   --text-0:#0f1222; --text-1:#6a7280;
   --brand:#2f7ef7; --accent:#22b07d;
   --radius-sm:8px; --radius-md:12px;
+  --shadow-md: 0 0 16px #22d3ee, 0 0 32px #f472b6;
 }
 
 /* B) Modern Neutral / Современный нейтрал */
