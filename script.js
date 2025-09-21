@@ -215,7 +215,7 @@ function popupTemplate(event) {
     <button class="share-btn"
       type="button"
       title="Скопировать ссылку"
-      onclick="copyShareLink('${event.id}')'"
+      onclick="window.copyShareLink('${event.id}')"
       style="position:absolute;right:16px;bottom:8px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);z-index:10;"
     >🔗</button>`;
 
@@ -333,19 +333,43 @@ window.copyShareLink = async function copyShareLink(id) {
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(shareUrl);
+      showCopyToast();
     } else {
+      // Fallback для старых браузеров
       const textarea = document.createElement('textarea');
       textarea.value = shareUrl;
       textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '-9999px';
       textarea.style.opacity = '0';
       document.body.appendChild(textarea);
+      textarea.focus();
       textarea.select();
-      document.execCommand('copy');
+
+      const successful = document.execCommand('copy');
       document.body.removeChild(textarea);
+
+      if (successful) {
+        showCopyToast();
+      } else {
+        throw new Error('Команда копирования не удалась');
+      }
     }
-    showCopyToast();
   } catch (error) {
-    console.error('Не удалось скопировать ссылку', error);
+    console.error('Не удалось скопировать ссылку:', error);
+
+    // Показываем уведомление об ошибке
+    if (copyToast) {
+      copyToast.textContent = 'Не удалось скопировать ссылку';
+      copyToast.style.background = 'var(--surface-1)';
+      copyToast.style.color = 'var(--text-0)';
+      showCopyToast();
+
+      // Возвращаем исходный текст через 3 секунды
+      setTimeout(() => {
+        copyToast.textContent = 'Ссылка скопирована';
+      }, 3000);
+    }
   }
 };
 
