@@ -121,8 +121,21 @@ def save_cache(cache: dict) -> None:
     )
 
 
+def save_cache_if_changed(cache: dict, original_cache: dict) -> None:
+    """Сохранить кэш только если он изменился."""
+    if cache != original_cache:
+        CACHE_FILE.write_text(
+            json.dumps(cache, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"💾 Кэш обновлён ({len(cache)} записей)")
+    else:
+        print("💾 Кэш не изменился, сохранение пропущено")
+
+
 # Кэш адрес→[lat, lon]
 geocache = load_cache()
+original_cache = geocache.copy()  # Сохраняем оригинал для сравнения
 
 geolog = {}  # адрес → {'arcgis':..., 'yandex':..., 'nominatim':...}
 
@@ -249,8 +262,8 @@ def main():
         encoding="utf-8"
     )
 
-    # кэш сохраняем всегда — экономит лимиты
-    save_cache(geocache)
+    # кэш сохраняем только если изменился — экономит I/O
+    save_cache_if_changed(geocache, original_cache)
 
     if GEOCODE_SAVE_LOG:
         try:
