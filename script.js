@@ -2,6 +2,7 @@
 // MapLibre + список событий + нижний поисковый бар
 
 const JSON_URL = 'events.json';
+const CACHE_URL = 'geocode_cache.json';
 const REGION_BBOX = [19.30, 54.00, 23.10, 55.60];
 
 const MAP_OPTIONS = {
@@ -97,6 +98,10 @@ let searchDragStartY = null;
 let searchPanelOpen = false;
 let copyToastTimer = null;
 
+// Кэш координат
+let geocodeCache = {};
+let cacheLoaded = false;
+
 function updateBottomBarOffset() {
   if (!bottomBar) {
     document.documentElement.style.setProperty('--search-panel-offset', '0px');
@@ -135,6 +140,69 @@ function clearMarkers() {
 function formatLocation(location) {
   if (!location) return '';
   return location.replace(/,?\s*Калининград\s*$/i, '');
+}
+
+// Функции для работы с кэшем координат
+function loadGeocodeCache() {
+  return fetch(CACHE_URL)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(cache => {
+      geocodeCache = cache;
+      cacheLoaded = true;
+      console.log(`Кэш координат загружен: ${Object.keys(cache).length} адресов`);
+      return cache;
+    })
+    .catch(error => {
+      console.error('Ошибка загрузки кэша координат:', error);
+      geocodeCache = {};
+      cacheLoaded = true;
+      return {};
+    });
+}
+
+function getCoordinatesFromCache(location) {
+  if (!cacheLoaded || !location) return null;
+
+  // Нормализуем адрес для поиска
+  const normalizedLocation = location.trim();
+
+  // Ищем точное совпадение
+  if (geocodeCache[normalizedLocation]) {
+    return geocodeCache[normalizedLocation];
+  }
+
+  // Ищем частичное совпадение (если адрес содержит Калининград)
+  for (const [cachedLocation, coordinates] of Object.entries(geocodeCache)) {
+    if (normalizedLocation.includes(cachedLocation) || cachedLocation.includes(normalizedLocation)) {
+      return coordinates;
+    }
+  }
+
+  return null;
+}
+
+function updateEventCoordinates(event) {
+  // Если у события уже есть координаты, используем их
+  if (event.lat && event.lon) {
+    return event;
+  }
+
+  // Ищем координаты в кэше
+  const coordinates = getCoordinatesFromCache(event.location);
+  if (coordinates) {
+    event.lat = coordinates[0];
+    event.lon = coordinates[1];
+    console.log(`Найдены координаты для "${event.location}": [${coordinates[0]}, ${coordinates[1]}]`);
+  } else {
+    console.warn(`Координаты не найдены для "${event.location}"`);
+  }
+
+  return event;
 }
 
 function popupTemplate(event) {
@@ -634,12 +702,16 @@ document.addEventListener('click', event => {
   }
 });
 
-fetch(JSON_URL)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    return response.json();
+// Загружаем данные последовательно: сначала кэш, затем события
+loadGeocodeCache()
+  .then(() => {
+    return fetch(JSON_URL)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+      });
   })
   .then(events => {
     if (!Array.isArray(events) || events.length === 0) {
@@ -655,6 +727,11 @@ fetch(JSON_URL)
       }
       return;
     }
+
+    // Обновляем события координатами из кэша
+    events.forEach(event => {
+      updateEventCoordinates(event);
+    });
 
     events.sort((a, b) => a.date.localeCompare(b.date));
     events.forEach(event => {
