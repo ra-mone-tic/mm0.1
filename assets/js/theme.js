@@ -1,4 +1,4 @@
-;(function(){
+п»ї;(function(){
   const KEY = 'meowmap-theme';
   const DEFAULT = 'minimal';
   const THEMES = ['minimal','modern','neon','paper','amoled','a11y'];
@@ -21,13 +21,5 @@
   if(btn){
     btn.addEventListener('click', ()=> setTheme(nextTheme(getTheme())));
   }
-  // Быстрая клавиша — T
-  window.addEventListener('keydown', (e)=>{
-    if(e.key && e.key.toLowerCase()==='t' && !e.metaKey && !e.ctrlKey && !e.altKey){
-      setTheme(nextTheme(getTheme()));
-    }
-  });
+
 })();
-
-
-
