@@ -43,9 +43,14 @@ const DEVICE_TODAY = new Date().toISOString().slice(0, 10);
 function getEventDateLabel(dateStr) {
   if (dateStr === DEVICE_TODAY) return 'Сегодня';
   if (!dateStr) return '';
-  // Преобразуем yyyy-mm-dd в dd.mm.yyyy
+  // Преобразуем yyyy-mm-dd в dd.mm.yy для единого формата
   const m = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+  if (m) {
+    const day = parseInt(m[3]);
+    const month = parseInt(m[2]);
+    const year = m[1].slice(-2); // берем только последние 2 цифры года
+    return `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
+  }
   return dateStr;
 }
 
@@ -210,8 +215,8 @@ function popupTemplate(event) {
     <button class="share-btn"
       type="button"
       title="Скопировать ссылку"
-      onclick="copyShareLink('${event.id}')"
-      style="position:absolute;right:8px;bottom:6px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);"
+      onclick="copyShareLink('${event.id}')'"
+      style="position:absolute;right:16px;bottom:8px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);z-index:10;"
     >🔗</button>`;
 
   // Текст поста (без хештегов, даты и заголовка)
@@ -224,9 +229,8 @@ function popupTemplate(event) {
   const isLong = postText.length > COLLAPSED_LIMIT;
   const shortText = isLong ? postText.slice(0, COLLAPSED_LIMIT) : postText;
 
-  // Полоска-ручка для разворота и сворачивания
-  const expandHandle = isLong ? '<div class="popup-text-handle popup-text-expand"></div>' : '';
-  const collapseHandle = isLong ? '<div class="popup-text-handle popup-text-collapse" style="display:none;"></div>' : '';
+  // Новая ручка - только одна полоска внизу
+  const handle = isLong ? '<div class="popup-handle" style="position:absolute;bottom:0;left:0;right:0;height:8px;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;"><div style="width:46px;height:5px;border-radius:999px;background:color-mix(in srgb, var(--text-1) 25%, transparent);"></div></div>' : '';
 
   return `
     <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;">
@@ -235,9 +239,9 @@ function popupTemplate(event) {
       <div style="color:var(--text-1);">${getEventDateLabel(event.date)}</div>
       <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow:hidden;position:relative;">
         <span class="popup-text-short">${shortText}${isLong ? '…' : ''}</span>
-        ${expandHandle}
       </div>
-      <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText.replace(/\n/g, '<br>')}${collapseHandle}</div>
+      <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText.replace(/\n/g, '<br>')}</div>
+      ${handle}
       ${shareButton}
     </div>
   `;
@@ -248,49 +252,52 @@ function addMarker(event) {
   const marker = new maplibregl.Marker().setLngLat([event.lon, event.lat]).setPopup(popup).addTo(map);
   markers.push(marker);
   markerById.set(event.id, marker);
+
   // popup expand/collapse logic
   let popupState = { expanded: false };
-  function setCollapsed(popupEl) {
+
+  function toggleText(popupEl) {
     const shortText = popupEl.querySelector('.popup-text-short');
     const fullText = popupEl.querySelector('.popup-text-full');
-    const expandHandle = popupEl.querySelector('.popup-text-expand');
-    const collapseHandle = popupEl.querySelector('.popup-text-collapse');
-    if (shortText && fullText && expandHandle && collapseHandle) {
+    const handle = popupEl.querySelector('.popup-handle');
+
+    if (!shortText || !fullText) return;
+
+    if (popupState.expanded) {
+      // Свернуть
       shortText.style.display = 'inline';
-      expandHandle.style.display = 'block';
       fullText.style.display = 'none';
-      collapseHandle.style.display = 'none';
       popupState.expanded = false;
-    }
-  }
-  function setExpanded(popupEl) {
-    const shortText = popupEl.querySelector('.popup-text-short');
-    const fullText = popupEl.querySelector('.popup-text-full');
-    const expandHandle = popupEl.querySelector('.popup-text-expand');
-    const collapseHandle = popupEl.querySelector('.popup-text-collapse');
-    if (shortText && fullText && expandHandle && collapseHandle) {
+    } else {
+      // Развернуть
       shortText.style.display = 'none';
-      expandHandle.style.display = 'none';
       fullText.style.display = 'block';
-      collapseHandle.style.display = 'block';
       popupState.expanded = true;
     }
   }
+
   popup.on('open', () => {
     const popupEl = popup.getElement();
     if (!popupEl) return;
-    const expandHandle = popupEl.querySelector('.popup-text-expand');
-    const collapseHandle = popupEl.querySelector('.popup-text-collapse');
-    setCollapsed(popupEl);
-    if (expandHandle && collapseHandle) {
-      expandHandle.onclick = () => setExpanded(popupEl);
-      collapseHandle.onclick = () => setCollapsed(popupEl);
+
+    const handle = popupEl.querySelector('.popup-handle');
+    if (handle) {
+      handle.onclick = () => toggleText(popupEl);
     }
   });
+
   popup.on('close', () => {
     const popupEl = popup.getElement();
     if (!popupEl) return;
-    setCollapsed(popupEl);
+
+    // Сбрасываем состояние при закрытии
+    const shortText = popupEl.querySelector('.popup-text-short');
+    const fullText = popupEl.querySelector('.popup-text-full');
+    if (shortText && fullText) {
+      shortText.style.display = 'inline';
+      fullText.style.display = 'none';
+      popupState.expanded = false;
+    }
   });
 }
 
