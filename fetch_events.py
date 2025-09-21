@@ -173,9 +173,14 @@ def geocode_addr(addr: str):
     """Каскадное геокодирование: ArcGIS → Yandex → Nominatim.
        Возвращает [lat, lon] или [None, None]. Все результаты пишем в кэш.
     """
+    # Проверяем кэш в начале
     if addr in geocache:
-        return geocache[addr]
+        cached_coords = geocache[addr]
+        if cached_coords != [None, None]:  # Если координаты найдены ранее
+            print(f"[CACHE    ] HIT | {addr} → {cached_coords[0]:.6f},{cached_coords[1]:.6f}")
+            return cached_coords
 
+    # Если в кэше нет или координаты None - делаем геокодинг
     for provider in GEOCODERS:
         name, func = provider["name"], provider["func"]
         if not func:
