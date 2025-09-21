@@ -15,7 +15,6 @@ venv/
 ## Logs and local artifacts
 logs/
 geocode_log.json
-geocode_cache.json
 
 ## OS/editor junk
 .DS_Store
