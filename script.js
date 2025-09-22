@@ -893,9 +893,9 @@ loadGeocodeCache()
     if (dateInput) {
       dateInput.min = events[0].date;
       dateInput.max = events[events.length - 1].date;
-      const first = events.find(event => event.date >= DEVICE_TODAY)?.date ?? events[0].date;
-      dateInput.value = first;
-      renderDay(first);
+      // По умолчанию всегда устанавливаем текущую дату устройства
+      dateInput.value = DEVICE_TODAY;
+      renderDay(DEVICE_TODAY);
     }
 
     updateArchiveButtonLabel();
