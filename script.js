@@ -224,23 +224,7 @@ function getDayOfWeekFromDate(dateStr) {
   return date.getDay(); // 0 - воскресенье, 1 - понедельник, ..., 6 - суббота
 }
 
-// Функция для группировки событий по дням недели
-function groupEventsByDayOfWeek(events) {
-  const groups = new Map();
 
-  events.forEach(event => {
-    const dayOfWeek = getDayOfWeekFromDate(event.date);
-    if (dayOfWeek === -1) return;
-
-    const dayName = getDayOfWeekName(dayOfWeek);
-    if (!groups.has(dayName)) {
-      groups.set(dayName, []);
-    }
-    groups.get(dayName).push(event);
-  });
-
-  return groups;
-}
 
 const mapContainer = document.getElementById('map');
 if (!window.maplibregl || !maplibregl.supported()) {
@@ -810,63 +794,51 @@ function renderEventList(list) {
     });
   }
 
-  // Группируем остальные события по дням недели (исключая сегодня и завтра)
+  // Для остальных событий: сортируем по дате и показываем с заголовками дней недели
   const otherEvents = list.filter(event => event.date !== todayStr && event.date !== tomorrowStr);
-  const groupedEvents = groupEventsByDayOfWeek(otherEvents);
 
-  // Определяем порядок дней недели (начиная с сегодняшнего дня)
-  const todayIndex = today.getDay();
-  const orderedDays = [];
+  if (otherEvents.length > 0) {
+    // Сортируем события по дате (от старых к новым)
+    const sortedEvents = otherEvents.sort((a, b) => a.date.localeCompare(b.date));
 
-  // Добавляем дни начиная с сегодняшнего
-  for (let i = 0; i < 7; i++) {
-    const dayIndex = (todayIndex + i) % 7;
-    const dayName = getDayOfWeekName(dayIndex);
-    if (groupedEvents.has(dayName)) {
-      orderedDays.push(dayName);
-    }
-  }
+    let lastDayName = '';
 
-  // Если есть события на другие дни (например, если мы в архиве), добавляем их
-  groupedEvents.forEach((events, dayName) => {
-    if (!orderedDays.includes(dayName)) {
-      orderedDays.push(dayName);
-    }
-  });
+    sortedEvents.forEach(event => {
+      const dayOfWeek = getDayOfWeekFromDate(event.date);
+      const dayName = getDayOfWeekName(dayOfWeek);
 
-  // Рендерим события по группам
-  orderedDays.forEach(dayName => {
-    const dayEvents = groupedEvents.get(dayName);
-    if (!dayEvents || dayEvents.length === 0) return;
+      // Показываем заголовок дня недели только если он изменился
+      if (dayName !== lastDayName) {
+        // Создаем заголовок раздела
+        const sectionHeader = document.createElement('div');
+        sectionHeader.className = 'day-section-header';
+        sectionHeader.style.cssText = `
+          margin: 16px 0 8px 0;
+          padding: 4px 8px;
+          background: var(--surface-2);
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          font-weight: bold;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: var(--text-1);
+          border-left: 3px solid var(--brand);
+        `;
 
-    // Создаем заголовок раздела
-    const sectionHeader = document.createElement('div');
-    sectionHeader.className = 'day-section-header';
-    sectionHeader.style.cssText = `
-      margin: 16px 0 8px 0;
-      padding: 4px 8px;
-      background: var(--surface-2);
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-1);
-      border-left: 3px solid var(--brand);
-    `;
+        // Если это текущий день недели, выделяем заголовок
+        const todayIndex = today.getDay();
+        const isToday = dayOfWeek === todayIndex;
+        if (isToday) {
+          sectionHeader.style.color = 'var(--brand)';
+          sectionHeader.style.background = 'color-mix(in srgb, var(--brand) 10%, var(--surface-2))';
+        }
 
-    // Если это сегодня, выделяем заголовок
-    const isToday = dayName === getDayOfWeekName(todayIndex);
-    if (isToday) {
-      sectionHeader.style.color = 'var(--brand)';
-      sectionHeader.style.background = 'color-mix(in srgb, var(--brand) 10%, var(--surface-2))';
-    }
+        sectionHeader.textContent = dayName;
+        listContainer.appendChild(sectionHeader);
+        lastDayName = dayName;
+      }
 
-    sectionHeader.textContent = dayName;
-    listContainer.appendChild(sectionHeader);
-
-    // Добавляем события для этого дня
-    dayEvents.forEach(event => {
+      // Добавляем событие
       const item = document.createElement('div');
       item.className = 'item';
       item.dataset.eventId = event.id;
@@ -888,7 +860,7 @@ function renderEventList(list) {
       });
       listContainer.appendChild(item);
     });
-  });
+  }
 }
 
 function ensureListForEvent(eventData) {
