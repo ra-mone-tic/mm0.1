@@ -197,16 +197,74 @@ function generateTransliterations(text) {
   return generateExtendedTransliterations(text);
 }
 
-function getEventDateLabel(dateStr) {
-  if (dateStr === DEVICE_TODAY) return 'Сегодня';
+function extractTimeFromText(text) {
+  if (!text) return null;
+
+  // Ищем время в форматах: "18:00", "18:00-22:00"
+  // Используем более строгие паттерны, чтобы не путать с датами dd.mm
+  const timePatterns = [
+    /(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/,  // 18:00 - 22:00 (только с двоеточием)
+    /(\d{1,2}):(\d{2})/   // 18:00 (только с двоеточием)
+  ];
+
+  for (const pattern of timePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      if (match.length === 5) {
+        // Формат с диапазоном времени
+        const startHour = parseInt(match[1]);
+        const startMin = parseInt(match[2]);
+        const endHour = parseInt(match[3]);
+        const endMin = parseInt(match[4]);
+
+        // Проверяем, что это действительно время, а не дата
+        // Часы должны быть 00-23, минуты 00-59
+        if (startHour >= 0 && startHour <= 23 &&
+            startMin >= 0 && startMin <= 59 &&
+            endHour >= 0 && endHour <= 23 &&
+            endMin >= 0 && endMin <= 59) {
+          return `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}-${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+        }
+      } else if (match.length === 3) {
+        // Формат с одним временем
+        const hour = parseInt(match[1]);
+        const min = parseInt(match[2]);
+
+        // Проверяем, что это действительно время, а не дата
+        // Часы должны быть 00-23, минуты 00-59
+        if (hour >= 0 && hour <= 23 && min >= 0 && min <= 59) {
+          return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+function getEventDateLabel(dateStr, eventText = null) {
+  if (dateStr === DEVICE_TODAY) {
+    const timeStr = eventText ? extractTimeFromText(eventText) : null;
+    return timeStr ? `Сегодня ${timeStr}` : 'Сегодня';
+  }
   if (!dateStr) return '';
+
   // Преобразуем yyyy-mm-dd в dd.mm.yy для единого формата
   const m = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (m) {
     const day = parseInt(m[3]);
     const month = parseInt(m[2]);
     const year = m[1].slice(-2); // берем только последние 2 цифры года
-    return `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
+    const dateStr = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
+
+    if (eventText) {
+      const timeStr = extractTimeFromText(eventText);
+      if (timeStr) {
+        return `${dateStr} ${timeStr}`;
+      }
+    }
+
+    return dateStr;
   }
   return dateStr;
 }
@@ -499,7 +557,7 @@ function popupTemplate(event) {
     <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;">
       <div><strong>${event.title}</strong></div>
       <div>${formatLocation(event.location)}</div>
-      <div style="color:var(--text-1);">${getEventDateLabel(event.date)}</div>
+      <div style="color:var(--text-1);">${getEventDateLabel(event.date, event.text)}</div>
       <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow:hidden;position:relative;">
         <span class="popup-text-short">${shortText}${isLong ? '…' : ''}</span>
       </div>
@@ -705,7 +763,7 @@ function renderEventList(list) {
       item.dataset.eventDate = event.date;
       item.setAttribute('role', 'button');
       item.tabIndex = 0;
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text)}</i>`;
 
       const activate = () => {
         focusEventOnMap(event);
@@ -809,7 +867,7 @@ function renderEventList(list) {
       item.dataset.eventDate = event.date;
       item.setAttribute('role', 'button');
       item.tabIndex = 0;
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text)}</i>`;
 
       const activate = () => {
         focusEventOnMap(event);
@@ -877,7 +935,7 @@ function renderEventList(list) {
       item.dataset.eventDate = event.date;
       item.setAttribute('role', 'button');
       item.tabIndex = 0;
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text)}</i>`;
 
       const activate = () => {
         focusEventOnMap(event);
@@ -979,7 +1037,7 @@ function renderSearchResults(query = '') {
     item.dataset.eventId = event.id;
     item.setAttribute('role', 'option');
     item.tabIndex = 0;
-    item.innerHTML = `<strong>${event.title}</strong><span>${event.location}</span><span>${getEventDateLabel(event.date)}</span>`;
+    item.innerHTML = `<strong>${event.title}</strong><span>${event.location}</span><span>${getEventDateLabel(event.date, event.text)}</span>`;
 
     const activate = () => {
       ensureListForEvent(event);
