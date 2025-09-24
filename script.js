@@ -157,6 +157,37 @@ function getEventDateLabel(dateStr) {
   return dateStr;
 }
 
+// Функция для получения названий дней недели на русском
+function getDayOfWeekName(dayIndex) {
+  const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+  return daysOfWeek[dayIndex] || '';
+}
+
+// Функция для получения дня недели по дате
+function getDayOfWeekFromDate(dateStr) {
+  if (!dateStr) return -1;
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.getDay(); // 0 - воскресенье, 1 - понедельник, ..., 6 - суббота
+}
+
+// Функция для группировки событий по дням недели
+function groupEventsByDayOfWeek(events) {
+  const groups = new Map();
+
+  events.forEach(event => {
+    const dayOfWeek = getDayOfWeekFromDate(event.date);
+    if (dayOfWeek === -1) return;
+
+    const dayName = getDayOfWeekName(dayOfWeek);
+    if (!groups.has(dayName)) {
+      groups.set(dayName, []);
+    }
+    groups.get(dayName).push(event);
+  });
+
+  return groups;
+}
+
 const mapContainer = document.getElementById('map');
 if (!window.maplibregl || !maplibregl.supported()) {
   mapContainer.innerHTML = '<p style="padding:16px;">MapLibre требует поддержки WebGL. Обновите браузер или включите аппаратное ускорение.</p>';
@@ -533,27 +564,84 @@ function renderEventList(list) {
     return;
   }
 
-  list.forEach(event => {
-    const item = document.createElement('div');
-    item.className = 'item';
-    item.dataset.eventId = event.id;
-    item.dataset.eventDate = event.date;
-    item.setAttribute('role', 'button');
-    item.tabIndex = 0;
-    item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
+  // Группируем события по дням недели
+  const groupedEvents = groupEventsByDayOfWeek(list);
 
-    const activate = () => {
-      focusEventOnMap(event);
-    };
+  // Определяем порядок дней недели (начиная с сегодняшнего дня)
+  const today = new Date();
+  const todayIndex = today.getDay();
+  const orderedDays = [];
 
-    item.addEventListener('click', activate);
-    item.addEventListener('keydown', evt => {
-      if (evt.key === 'Enter' || evt.key === ' ') {
-        evt.preventDefault();
-        activate();
-      }
+  // Добавляем дни начиная с сегодняшнего
+  for (let i = 0; i < 7; i++) {
+    const dayIndex = (todayIndex + i) % 7;
+    const dayName = getDayOfWeekName(dayIndex);
+    if (groupedEvents.has(dayName)) {
+      orderedDays.push(dayName);
+    }
+  }
+
+  // Если есть события на другие дни (например, если мы в архиве), добавляем их
+  groupedEvents.forEach((events, dayName) => {
+    if (!orderedDays.includes(dayName)) {
+      orderedDays.push(dayName);
+    }
+  });
+
+  // Рендерим события по группам
+  orderedDays.forEach(dayName => {
+    const dayEvents = groupedEvents.get(dayName);
+    if (!dayEvents || dayEvents.length === 0) return;
+
+    // Создаем заголовок раздела
+    const sectionHeader = document.createElement('div');
+    sectionHeader.className = 'day-section-header';
+    sectionHeader.style.cssText = `
+      margin: 16px 0 8px 0;
+      padding: 4px 8px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-1);
+      border-left: 3px solid var(--brand);
+    `;
+
+    // Если это сегодня, выделяем заголовок
+    const isToday = dayName === getDayOfWeekName(todayIndex);
+    if (isToday) {
+      sectionHeader.style.color = 'var(--brand)';
+      sectionHeader.style.background = 'color-mix(in srgb, var(--brand) 10%, var(--surface-2))';
+    }
+
+    sectionHeader.textContent = dayName;
+    listContainer.appendChild(sectionHeader);
+
+    // Добавляем события для этого дня
+    dayEvents.forEach(event => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.dataset.eventId = event.id;
+      item.dataset.eventDate = event.date;
+      item.setAttribute('role', 'button');
+      item.tabIndex = 0;
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
+
+      const activate = () => {
+        focusEventOnMap(event);
+      };
+
+      item.addEventListener('click', activate);
+      item.addEventListener('keydown', evt => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          activate();
+        }
+      });
+      listContainer.appendChild(item);
     });
-    listContainer.appendChild(item);
   });
 }
 
