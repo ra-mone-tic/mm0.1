@@ -218,7 +218,7 @@ const archiveButton = document.getElementById('toggleArchive');
 const sidebar = document.getElementById('sidebar');
 const burger = document.getElementById('burger');
 const logo = document.getElementById('logo');
-const closeBtn = document.getElementById('closeSidebar');
+
 const bottomBar = document.getElementById('bottomBar');
 const searchInput = document.getElementById('global-search');
 const searchPanel = document.getElementById('search-panel');
@@ -962,7 +962,6 @@ const toggleSidebar = () => sidebar?.classList.toggle('open');
 const closeSidebarPanel = () => sidebar?.classList.remove('open');
 
 burger?.addEventListener('click', toggleSidebar);
-closeBtn?.addEventListener('click', closeSidebarPanel);
 
 function bindKeyboardActivation(element, handler) {
   if (!element) return;
@@ -975,7 +974,6 @@ function bindKeyboardActivation(element, handler) {
 }
 
 bindKeyboardActivation(burger, toggleSidebar);
-bindKeyboardActivation(closeBtn, closeSidebarPanel);
 
 document.addEventListener('click', event => {
   if (sidebar?.classList.contains('open') && !sidebar.contains(event.target) && event.target !== burger && event.target !== logo) {
