@@ -564,11 +564,60 @@ function renderEventList(list) {
     return;
   }
 
-  // Группируем события по дням недели
-  const groupedEvents = groupEventsByDayOfWeek(list);
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const todayEvents = list.filter(event => event.date === todayStr);
+
+  // Если есть события на сегодня, создаем раздел "Сегодня"
+  if (todayEvents.length > 0) {
+    // Создаем заголовок раздела "Сегодня"
+    const todayHeader = document.createElement('div');
+    todayHeader.className = 'day-section-header';
+    todayHeader.style.cssText = `
+      margin: 16px 0 8px 0;
+      padding: 4px 8px;
+      background: color-mix(in srgb, var(--brand) 10%, var(--surface-2));
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--brand);
+      border-left: 3px solid var(--brand);
+    `;
+    todayHeader.textContent = 'Сегодня';
+    listContainer.appendChild(todayHeader);
+
+    // Добавляем события на сегодня
+    todayEvents.forEach(event => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.dataset.eventId = event.id;
+      item.dataset.eventDate = event.date;
+      item.setAttribute('role', 'button');
+      item.tabIndex = 0;
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}`;
+
+      const activate = () => {
+        focusEventOnMap(event);
+      };
+
+      item.addEventListener('click', activate);
+      item.addEventListener('keydown', evt => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          activate();
+        }
+      });
+      listContainer.appendChild(item);
+    });
+  }
+
+  // Группируем остальные события по дням недели
+  const otherEvents = list.filter(event => event.date !== todayStr);
+  const groupedEvents = groupEventsByDayOfWeek(otherEvents);
 
   // Определяем порядок дней недели (начиная с сегодняшнего дня)
-  const today = new Date();
   const todayIndex = today.getDay();
   const orderedDays = [];
 
