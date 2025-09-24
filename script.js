@@ -245,7 +245,10 @@ function extractTimeFromText(text) {
 function getEventDateLabel(dateStr, eventText = null) {
   if (dateStr === DEVICE_TODAY) {
     const timeStr = eventText ? extractTimeFromText(eventText) : null;
-    return timeStr ? `Сегодня ${timeStr}` : 'Сегодня';
+    if (timeStr) {
+      return `<span style="font-weight: bold; font-style: italic;">Сегодня</span> <span style="font-style: italic;">${timeStr}</span>`;
+    }
+    return '<span style="font-weight: bold; font-style: italic;">Сегодня</span>';
   }
   if (!dateStr) return '';
 
@@ -255,18 +258,18 @@ function getEventDateLabel(dateStr, eventText = null) {
     const day = parseInt(m[3]);
     const month = parseInt(m[2]);
     const year = m[1].slice(-2); // берем только последние 2 цифры года
-    const dateStr = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
+    const formattedDate = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
 
     if (eventText) {
       const timeStr = extractTimeFromText(eventText);
       if (timeStr) {
-        return `${dateStr} ${timeStr}`;
+        return `<span style="font-weight: bold; font-style: italic;">${formattedDate}</span> <span style="font-style: italic;">${timeStr}</span>`;
       }
     }
 
-    return dateStr;
+    return `<span style="font-weight: bold; font-style: italic;">${formattedDate}</span>`;
   }
-  return dateStr;
+  return `<span style="font-weight: bold; font-style: italic;">${dateStr}</span>`;
 }
 
 // Функция для получения названий дней недели на русском
