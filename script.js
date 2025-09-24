@@ -624,7 +624,14 @@ function renderEventList(list) {
 
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
+
+  // Получаем завтрашнюю дату
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
   const todayEvents = list.filter(event => event.date === todayStr);
+  const tomorrowEvents = list.filter(event => event.date === tomorrowStr);
 
   // Если есть события на сегодня, создаем раздел "Сегодня"
   if (todayEvents.length > 0) {
@@ -671,8 +678,53 @@ function renderEventList(list) {
     });
   }
 
-  // Группируем остальные события по дням недели
-  const otherEvents = list.filter(event => event.date !== todayStr);
+  // Если есть события на завтра, создаем раздел "Завтра"
+  if (tomorrowEvents.length > 0) {
+    // Создаем заголовок раздела "Завтра"
+    const tomorrowHeader = document.createElement('div');
+    tomorrowHeader.className = 'day-section-header';
+    tomorrowHeader.style.cssText = `
+      margin: 16px 0 8px 0;
+      padding: 4px 8px;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-1);
+      border-left: 3px solid var(--brand);
+    `;
+    tomorrowHeader.textContent = 'Завтра';
+    listContainer.appendChild(tomorrowHeader);
+
+    // Добавляем события на завтра
+    tomorrowEvents.forEach(event => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.dataset.eventId = event.id;
+      item.dataset.eventDate = event.date;
+      item.setAttribute('role', 'button');
+      item.tabIndex = 0;
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
+
+      const activate = () => {
+        focusEventOnMap(event);
+      };
+
+      item.addEventListener('click', activate);
+      item.addEventListener('keydown', evt => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          activate();
+        }
+      });
+      listContainer.appendChild(item);
+    });
+  }
+
+  // Группируем остальные события по дням недели (исключая сегодня и завтра)
+  const otherEvents = list.filter(event => event.date !== todayStr && event.date !== tomorrowStr);
   const groupedEvents = groupEventsByDayOfWeek(otherEvents);
 
   // Определяем порядок дней недели (начиная с сегодняшнего дня)
