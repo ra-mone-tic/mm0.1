@@ -1,6 +1,60 @@
 // ===== MeowMap: карта событий =====
 // MapLibre + список событий + нижний поисковый бар
 
+// Кастомный контрол навигации без кнопки компаса
+class CustomNavigationControl {
+  constructor() {
+    this._container = null;
+  }
+
+  onAdd(map) {
+    this._map = map;
+    this._container = document.createElement('div');
+    this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+
+    // Кнопка увеличения масштаба
+    const zoomInButton = this._createButton('zoom-in', 'Увеличить масштаб', () => {
+      this._map.zoomIn();
+    });
+
+    // Кнопка уменьшения масштаба
+    const zoomOutButton = this._createButton('zoom-out', 'Уменьшить масштаб', () => {
+      this._map.zoomOut();
+    });
+
+    this._container.appendChild(zoomInButton);
+    this._container.appendChild(zoomOutButton);
+
+    return this._container;
+  }
+
+  onRemove() {
+    if (this._container && this._container.parentNode) {
+      this._container.parentNode.removeChild(this._container);
+    }
+    this._map = undefined;
+  }
+
+  _createButton(className, title, fn) {
+    const button = document.createElement('button');
+    button.className = `maplibregl-ctrl-${className}`;
+    button.type = 'button';
+    button.title = title;
+    button.setAttribute('aria-label', title);
+
+    // Добавляем иконки с правильным стилем
+    if (className === 'zoom-in') {
+      button.innerHTML = '<span style="font-size: 18px; line-height: 1; font-weight: bold;">+</span>';
+    } else if (className === 'zoom-out') {
+      button.innerHTML = '<span style="font-size: 18px; line-height: 1; font-weight: bold;">−</span>';
+    }
+
+    button.addEventListener('click', fn);
+
+    return button;
+  }
+}
+
 const JSON_URL = 'events.json';
 const CACHE_URL = 'geocode_cache.json';
 const REGION_BBOX = [19.30, 54.00, 23.10, 55.60];
@@ -203,10 +257,14 @@ map.on('error', event => {
   console.error('Map style load error', event.error);
 });
 
-map.addControl(new maplibregl.NavigationControl(), 'top-right');
+map.addControl(new CustomNavigationControl(), 'top-right');
 map.addControl(new maplibregl.GeolocateControl({
   positionOptions: { enableHighAccuracy: true },
-  showUserLocation: true
+  showUserLocation: true,
+  labelText: 'Найти моё местоположение',
+  noLocationText: 'Геолокация недоступна',
+  searchingText: 'Поиск местоположения...',
+  foundText: 'Моё местоположение'
 }), 'top-right');
 
 map.dragRotate.disable();
