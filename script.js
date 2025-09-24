@@ -693,6 +693,38 @@ function renderEventList(list) {
     return;
   }
 
+  // Если показываем архив, то просто сортируем по дате от новых к старым без группировки
+  if (showingArchive) {
+    // Сортируем события по дате (от новых к старым)
+    const sortedEvents = list.sort((a, b) => b.date.localeCompare(a.date));
+
+    sortedEvents.forEach(event => {
+      const item = document.createElement('div');
+      item.className = 'item';
+      item.dataset.eventId = event.id;
+      item.dataset.eventDate = event.date;
+      item.setAttribute('role', 'button');
+      item.tabIndex = 0;
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date)}</i>`;
+
+      const activate = () => {
+        focusEventOnMap(event);
+      };
+
+      item.addEventListener('click', activate);
+      item.addEventListener('keydown', evt => {
+        if (evt.key === 'Enter' || evt.key === ' ') {
+          evt.preventDefault();
+          activate();
+        }
+      });
+      listContainer.appendChild(item);
+    });
+
+    return;
+  }
+
+  // Логика для предстоящих событий (не архив)
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
 
