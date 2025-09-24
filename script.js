@@ -267,6 +267,93 @@ map.addControl(new maplibregl.GeolocateControl({
   foundText: 'Моё местоположение'
 }), 'top-right');
 
+// Функция для обновления описания кнопки геолокации в зависимости от её состояния
+function updateGeolocateButtonDescription(button) {
+  if (!button) return;
+
+  const currentAriaLabel = button.getAttribute('aria-label');
+  const currentTitle = button.getAttribute('title');
+
+  // Проверяем текущее состояние кнопки по её классам и атрибутам
+  const isDisabled = button.disabled || button.classList.contains('maplibregl-ctrl-geolocate-disabled');
+  const isActive = button.classList.contains('maplibregl-ctrl-geolocate-active');
+  const isLoading = button.classList.contains('maplibregl-ctrl-geolocate-waiting');
+
+  let newAriaLabel = '';
+  let newTitle = '';
+
+  if (isDisabled) {
+    // Геолокация недоступна
+    newAriaLabel = 'Геолокация недоступна';
+    newTitle = 'Геолокация недоступна';
+  } else if (isLoading) {
+    // Идет поиск местоположения
+    newAriaLabel = 'Поиск местоположения...';
+    newTitle = 'Поиск местоположения...';
+  } else if (isActive) {
+    // Местоположение найдено
+    newAriaLabel = 'Моё местоположение';
+    newTitle = 'Моё местоположение';
+  } else {
+    // Обычное состояние - кнопка для определения локации
+    newAriaLabel = 'Определить текущее местоположение на карте';
+    newTitle = 'Определить текущее местоположение на карте';
+  }
+
+  // Обновляем атрибуты только если они изменились
+  if (currentAriaLabel !== newAriaLabel) {
+    button.setAttribute('aria-label', newAriaLabel);
+  }
+  if (currentTitle !== newTitle) {
+    button.setAttribute('title', newTitle);
+  }
+}
+
+// Функция для поиска и настройки кнопки геолокации
+function setupGeolocateButton() {
+  const selectors = [
+    '.maplibregl-ctrl-geolocate button',
+    '.maplibregl-ctrl-geolocate',
+    '[aria-label="Show my location"]',
+    'button[title="Show my location"]'
+  ];
+
+  for (const selector of selectors) {
+    const button = document.querySelector(selector);
+    if (button) {
+      // Устанавливаем начальное описание
+      updateGeolocateButtonDescription(button);
+
+      // Наблюдаем за изменениями классов кнопки
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            updateGeolocateButtonDescription(button);
+          }
+        });
+      });
+
+      observer.observe(button, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+
+      console.log('Кнопка геолокации настроена с динамическими описаниями');
+      return;
+    }
+  }
+
+  // Если кнопка не найдена сразу, ждем немного и пробуем снова
+  setTimeout(setupGeolocateButton, 100);
+  setTimeout(setupGeolocateButton, 500);
+  setTimeout(setupGeolocateButton, 1000);
+}
+
+// Вызываем функцию после загрузки карты
+map.on('load', () => {
+  setTimeout(setupGeolocateButton, 100);
+});
+
 map.dragRotate.disable();
 map.touchZoomRotate.disableRotation();
 
