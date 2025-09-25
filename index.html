@@ -21,6 +21,10 @@
       background: var(--surface-0);
       color: var(--text-0);
       font-family: var(--font-ui);
+      /* Безопасные зоны для современных устройств */
+      padding-top: env(safe-area-inset-top);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
     #controls {
       display: flex;
@@ -28,13 +32,36 @@
       gap: 8px;
       flex-wrap: wrap;
       padding: 12px;
+      padding-top: calc(12px + env(safe-area-inset-top));
+      padding-left: calc(12px + env(safe-area-inset-left));
+      padding-right: calc(12px + env(safe-area-inset-right));
       background: var(--surface-1);
       border-bottom: var(--border);
     }
     #layout { flex: 1; display: flex; }
     #map { flex: 1; width: 100%; height: 100%; }
-    input[type="date"] { font-size: 16px; flex: 0 0 160px; }
-    #logo { height: 40px; max-width: 100%; cursor: pointer; }
+    input[type="date"] {
+      font-size: 16px;
+      flex: 0 0 160px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: var(--border);
+      background: var(--surface-0);
+      cursor: pointer;
+    }
+    #logo {
+      height: 40px;
+      max-width: 100%;
+      cursor: pointer;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      border-radius: var(--radius-xs);
+      transition: background var(--fx-fast);
+    }
+    #logo:hover { background: var(--surface-2); }
     #burger {
       cursor: pointer;
       font-size: 22px;
@@ -47,6 +74,11 @@
       padding: 8px;
       border-radius: var(--radius-xs);
       transition: background var(--fx-fast);
+      min-height: 44px;
+      min-width: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     #burger:hover { background: var(--surface-2); }
     #burger:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
@@ -223,13 +255,77 @@
       background: var(--surface-2);
     }
 
+    /* Медиа-запросы для мобильных устройств */
     @media (max-width: 768px) {
       #layout { flex-direction: column; }
-      #logo { height: 28px; }
+      #logo { height: 32px; min-height: 44px; min-width: 44px; }
       #sidebar { width: 80%; max-width: 320px; }
       #bottomBar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
       .search-field { padding: 8px 12px; }
       #global-search { font-size: 15px; }
+    }
+
+    /* Планшеты и большие телефоны */
+    @media (max-width: 640px) {
+      #controls {
+        gap: 6px;
+        padding: 10px 8px;
+      }
+      #logo { height: 30px; }
+      input[type="date"] { flex: 0 0 140px; font-size: 14px; }
+    }
+
+    /* Стандартные мобильные телефоны */
+    @media (max-width: 480px) {
+      #controls {
+        gap: 4px;
+        padding: 8px 6px;
+        flex-wrap: wrap;
+      }
+      #logo { height: 28px; }
+      input[type="date"] { flex: 0 0 120px; font-size: 13px; }
+      #burger { font-size: 20px; padding: 6px; }
+    }
+
+    /* Узкие экраны (iPhone SE, старые устройства) */
+    @media (max-width: 375px) {
+      #controls {
+        gap: 2px;
+        padding: 6px 4px;
+        justify-content: space-between;
+      }
+      #logo { height: 24px; }
+      input[type="date"] { flex: 0 0 100px; font-size: 12px; }
+      #burger { font-size: 18px; padding: 4px; }
+      label[for="event-date"] { font-size: 12px; }
+    }
+
+    /* Критически узкие экраны */
+    @media (max-width: 320px) {
+      #controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+      }
+      #logo {
+        height: 20px;
+        align-self: center;
+        order: -1;
+      }
+      input[type="date"] {
+        flex: 1;
+        min-width: 0;
+        font-size: 12px;
+      }
+      #burger {
+        align-self: flex-end;
+        font-size: 16px;
+        padding: 2px;
+      }
+      label[for="event-date"] {
+        font-size: 11px;
+        margin-bottom: 2px;
+      }
     }
     .sidebar-footer {
       position: sticky;
