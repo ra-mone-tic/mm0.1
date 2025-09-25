@@ -223,7 +223,12 @@ function extractTimeFromText(text) {
             startMin >= 0 && startMin <= 59 &&
             endHour >= 0 && endHour <= 23 &&
             endMin >= 0 && endMin <= 59) {
-          return `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}-${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;
+          return {
+            full: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}-${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`,
+            start: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
+            end: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`,
+            hasEndTime: true
+          };
         }
       } else if (match.length === 3) {
         // Формат с одним временем
@@ -233,7 +238,12 @@ function extractTimeFromText(text) {
         // Проверяем, что это действительно время, а не дата
         // Часы должны быть 00-23, минуты 00-59
         if (hour >= 0 && hour <= 23 && min >= 0 && min <= 59) {
-          return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+          return {
+            full: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
+            start: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
+            end: null,
+            hasEndTime: false
+          };
         }
       }
     }
@@ -242,13 +252,24 @@ function extractTimeFromText(text) {
   return null;
 }
 
-function getEventDateLabel(dateStr, eventText = null) {
+function getEventDateLabel(dateStr, eventText = null, showTimeAgo = false) {
   if (dateStr === DEVICE_TODAY) {
     const timeStr = eventText ? extractTimeFromText(eventText) : null;
+    let result = '<span style="font-weight: bold; font-style: italic;">Сегодня</span>';
+
     if (timeStr) {
-      return `<span style="font-weight: bold; font-style: italic;">Сегодня</span> <span style="font-style: italic;">${timeStr}</span>`;
+      result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
     }
-    return '<span style="font-weight: bold; font-style: italic;">Сегодня</span>';
+
+    // Если нужно показать "Закончилось n часов назад"
+    if (showTimeAgo && timeStr && timeStr.hasEndTime) {
+      const timeAgoText = getTimeAgoText(timeStr.end);
+      if (timeAgoText) {
+        result += `<br><span style="font-size: 11px; color: var(--text-2);">${timeAgoText}</span>`;
+      }
+    }
+
+    return result;
   }
   if (!dateStr) return '';
 
@@ -260,14 +281,16 @@ function getEventDateLabel(dateStr, eventText = null) {
     const year = m[1].slice(-2); // берем только последние 2 цифры года
     const formattedDate = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
 
+    let result = `<span style="font-weight: bold; font-style: italic;">${formattedDate}</span>`;
+
     if (eventText) {
       const timeStr = extractTimeFromText(eventText);
       if (timeStr) {
-        return `<span style="font-weight: bold; font-style: italic;">${formattedDate}</span> <span style="font-style: italic;">${timeStr}</span>`;
+        result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
       }
     }
 
-    return `<span style="font-weight: bold; font-style: italic;">${formattedDate}</span>`;
+    return result;
   }
   return `<span style="font-weight: bold; font-style: italic;">${dateStr}</span>`;
 }
@@ -283,6 +306,35 @@ function getDayOfWeekFromDate(dateStr) {
   if (!dateStr) return -1;
   const date = new Date(dateStr + 'T00:00:00');
   return date.getDay(); // 0 - воскресенье, 1 - понедельник, ..., 6 - суббота
+}
+
+// Функция для расчета времени окончания события
+function getTimeAgoText(endTimeStr) {
+  if (!endTimeStr) return '';
+
+  const now = new Date();
+  const currentTime = now.getHours() * 60 + now.getMinutes();
+
+  // Парсим время окончания (формат "HH:MM")
+  const endMatch = endTimeStr.match(/(\d{1,2}):(\d{2})/);
+  if (!endMatch) return '';
+
+  const endHour = parseInt(endMatch[1]);
+  const endMin = parseInt(endMatch[2]);
+  const endTimeInMinutes = endHour * 60 + endMin;
+
+  // Если время окончания еще не наступило, возвращаем пустую строку
+  if (currentTime < endTimeInMinutes) return '';
+
+  const diffInMinutes = currentTime - endTimeInMinutes;
+  const hours = Math.floor(diffInMinutes / 60);
+
+  // Всегда показываем только часы, округляя в большую сторону
+  const roundedHours = Math.ceil(diffInMinutes / 60);
+
+  if (roundedHours === 1) return 'Закончилось 1 час назад';
+  if (roundedHours < 5) return `Закончилось ${roundedHours} часа назад`;
+  return `Закончилось ${roundedHours} часов назад`;
 }
 
 
@@ -794,11 +846,13 @@ function renderEventList(list) {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
+  // Получаем все сегодняшние события (как из upcoming, так и из archive)
+  const allTodayEvents = allEvents.filter(event => event.date === todayStr);
   const todayEvents = list.filter(event => event.date === todayStr);
   const tomorrowEvents = list.filter(event => event.date === tomorrowStr);
 
   // Если есть события на сегодня, создаем раздел "Сегодня"
-  if (todayEvents.length > 0) {
+  if (allTodayEvents.length > 0) {
     // Создаем заголовок раздела "Сегодня"
     const todayHeader = document.createElement('div');
     todayHeader.className = 'day-section-header';
@@ -817,15 +871,20 @@ function renderEventList(list) {
     todayHeader.textContent = 'Сегодня';
     listContainer.appendChild(todayHeader);
 
-    // Добавляем события на сегодня
-    todayEvents.forEach(event => {
+    // Добавляем все сегодняшние события
+    allTodayEvents.forEach(event => {
       const item = document.createElement('div');
       item.className = 'item';
       item.dataset.eventId = event.id;
       item.dataset.eventDate = event.date;
       item.setAttribute('role', 'button');
       item.tabIndex = 0;
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}`;
+
+      // Проверяем, нужно ли показывать подпись "Закончилось n часов назад"
+      const timeInfo = event.text ? extractTimeFromText(event.text) : null;
+      const showTimeAgo = timeInfo && timeInfo.hasEndTime && getTimeAgoText(timeInfo.end);
+
+      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
 
       const activate = () => {
         focusEventOnMap(event);
@@ -1280,8 +1339,40 @@ loadGeocodeCache()
     });
 
     allEvents = events;
-    upcomingEvents = events.filter(event => event.date >= DEVICE_TODAY);
-    archiveEvents = events.filter(event => event.date < DEVICE_TODAY);
+
+    // Модифицированная логика разделения событий
+    // События сегодняшнего дня без времени окончания или с будущим временем окончания - в upcomingEvents
+    // События сегодняшнего дня с интервалом времени, которые уже закончились - в archiveEvents
+    // Все остальные события - по старой логике
+    upcomingEvents = events.filter(event => {
+      if (event.date > DEVICE_TODAY) return true; // Будущие дни - всегда в upcoming
+      if (event.date < DEVICE_TODAY) return false; // Прошлые дни - всегда в archive
+
+      // Для сегодняшних событий проверяем время
+      if (!event.text) return true; // Без текста - в upcoming
+
+      const timeInfo = extractTimeFromText(event.text);
+      if (!timeInfo || !timeInfo.hasEndTime) return true; // Без времени окончания - в upcoming
+
+      // Проверяем, закончилось ли событие
+      const timeAgoText = getTimeAgoText(timeInfo.end);
+      return !timeAgoText; // Если есть текст "закончилось", то в archive, иначе в upcoming
+    });
+
+    archiveEvents = events.filter(event => {
+      if (event.date > DEVICE_TODAY) return false; // Будущие дни - не в archive
+      if (event.date < DEVICE_TODAY) return true; // Прошлые дни - всегда в archive
+
+      // Для сегодняшних событий проверяем время
+      if (!event.text) return false; // Без текста - не в archive
+
+      const timeInfo = extractTimeFromText(event.text);
+      if (!timeInfo || !timeInfo.hasEndTime) return false; // Без времени окончания - не в archive
+
+      // Проверяем, закончилось ли событие
+      const timeAgoText = getTimeAgoText(timeInfo.end);
+      return !!timeAgoText; // Если есть текст "закончилось", то в archive
+    });
 
     if (!upcomingEvents.length && archiveEvents.length) {
       showingArchive = true;
