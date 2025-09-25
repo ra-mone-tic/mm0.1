@@ -202,3 +202,10 @@ html[data-theme="a11y"]{
 
 html[data-theme='modern'] #sidebar{ background: rgba(255,255,255,.85); backdrop-filter: saturate(1.2) blur(6px); }
 
+/* Непрозрачный футер сайдбара для тем minimal и neon */
+html[data-theme="minimal"] .sidebar-footer {
+  background: #f9c5ff; /* Непрозрачный вариант surface-1 для minimal */
+}
+html[data-theme="neon"] .sidebar-footer {
+  background: rgba(18,20,28,1); /* Непрозрачный вариант surface-1 для neon */
+}
