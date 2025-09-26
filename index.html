@@ -116,6 +116,10 @@
     }
     #sidebar .item:hover { background: var(--surface-2); }
     #sidebar .item.is-active { outline: 2px solid color-mix(in srgb, var(--brand) 55%, transparent); border-radius: var(--radius-sm); }
+    #sidebar hr {
+      margin-top: 50px;
+      margin-bottom: 12px;
+    }
 
 
     :root { --search-panel-offset: 0px; }
@@ -264,6 +268,7 @@
       #layout { flex-direction: column; }
       #logo { height: 32px; min-height: 44px; min-width: 44px; }
       #sidebar { width: 80%; max-width: 320px; }
+      #sidebar hr { margin-top: 45px; }
       #bottomBar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
       .search-field { padding: 8px 12px; }
       #global-search { font-size: 15px; }
@@ -277,6 +282,7 @@
       }
       #logo { height: 30px; }
       input[type="date"] { flex: 0 0 140px; font-size: 14px; }
+      #sidebar hr { margin-top: 40px; }
     }
 
     /* Стандартные мобильные телефоны */
@@ -289,6 +295,7 @@
       #logo { height: 28px; }
       input[type="date"] { flex: 0 0 120px; font-size: 13px; }
       #burger { font-size: 20px; padding: 6px; }
+      #sidebar hr { margin-top: 35px; }
     }
 
     /* Узкие экраны (iPhone SE, старые устройства) */
@@ -302,6 +309,7 @@
       input[type="date"] { flex: 0 0 100px; font-size: 12px; }
       #burger { font-size: 18px; padding: 4px; }
       label[for="event-date"] { font-size: 12px; }
+      #sidebar hr { margin-top: 30px; }
     }
 
     /* Критически узкие экраны */
@@ -330,6 +338,7 @@
         font-size: 11px;
         margin-bottom: 2px;
       }
+      #sidebar hr { margin-top: 25px; }
     }
     .sidebar-footer {
       position: sticky;
