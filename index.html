@@ -340,16 +340,13 @@
       }
       #sidebar hr { margin-top: 25px; }
     }
+    /* Переопределение фона футера сайдбара для всех тем */
     .sidebar-footer {
       position: sticky;
       bottom: 0;
-      background: var(--surface-1);
+      background: transparent !important;
       padding: 8px;
-      border-top: var(--border);
-      border-top-left-radius: var(--radius-md);
-      border-top-right-radius: var(--radius-md);
-      border-bottom-left-radius: var(--radius-md);
-      border-bottom-right-radius: var(--radius-md);
+      text-align: right;
     }
     #copy-toast {
       position: fixed;
