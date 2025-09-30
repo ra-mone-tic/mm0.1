@@ -1279,7 +1279,13 @@ document.addEventListener('keydown', event => {
   }
 });
 
-const toggleSidebar = () => sidebar?.classList.toggle('open');
+const toggleSidebar = () => {
+  if (!sidebar?.classList.contains('open')) {
+    // Сайдбар закрыт, будет открыт — закрываем все открытые попапы
+    markers.forEach(marker => marker.getPopup()?.remove());
+  }
+  sidebar?.classList.toggle('open');
+};
 const closeSidebarPanel = () => sidebar?.classList.remove('open');
 
 burger?.addEventListener('click', toggleSidebar);
