@@ -253,8 +253,9 @@ function extractTimeFromText(text) {
 }
 
 function getEventDateLabel(dateStr, eventText = null, showTimeAgo = false) {
+  const timeStr = eventText ? extractTimeFromText(eventText) : null;
+
   if (dateStr === DEVICE_TODAY) {
-    const timeStr = eventText ? extractTimeFromText(eventText) : null;
     let result = '<span style="font-weight: bold; font-style: italic;">Сегодня</span>';
 
     if (timeStr) {
@@ -263,7 +264,7 @@ function getEventDateLabel(dateStr, eventText = null, showTimeAgo = false) {
 
     // Если нужно показать "Закончилось n часов назад"
     if (showTimeAgo && timeStr && timeStr.hasEndTime) {
-      const timeAgoText = getTimeAgoText(timeStr.end);
+      const timeAgoText = getTimeAgoText(dateStr, timeStr.end, timeStr.start);
       if (timeAgoText) {
         result += `<br><span style="font-size: 11px; color: var(--text-2);">${timeAgoText}</span>`;
       }
@@ -283,10 +284,15 @@ function getEventDateLabel(dateStr, eventText = null, showTimeAgo = false) {
 
     let result = `<span style="font-weight: bold; font-style: italic;">${formattedDate}</span>`;
 
-    if (eventText) {
-      const timeStr = extractTimeFromText(eventText);
-      if (timeStr) {
-        result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
+    if (timeStr) {
+      result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
+    }
+
+    // Если нужно показать "Закончилось n часов назад" для любого дня
+    if (showTimeAgo && timeStr && timeStr.hasEndTime) {
+      const timeAgoText = getTimeAgoText(dateStr, timeStr.end, timeStr.start);
+      if (timeAgoText) {
+        result += `<br><span style="font-size: 11px; color: var(--text-2);">${timeAgoText}</span>`;
       }
     }
 
@@ -308,33 +314,33 @@ function getDayOfWeekFromDate(dateStr) {
   return date.getDay(); // 0 - воскресенье, 1 - понедельник, ..., 6 - суббота
 }
 
-// Функция для расчета времени окончания события
-function getTimeAgoText(endTimeStr) {
-  if (!endTimeStr) return '';
+// Функция для расчета времени окончания события с датой
+function getTimeAgoText(eventDateStr, endTimeStr, startTimeStr) {
+  if (!endTimeStr || !eventDateStr) return '';
 
+  // Рассчитываем точное время окончания с учётом даты и переноса через полночь
+  let endDateStr = eventDateStr;
+  const startHour = startTimeStr ? parseInt(startTimeStr.split(':')[0]) : 0;
+  const endHour = parseInt(endTimeStr.split(':')[0]);
+  if (endHour < startHour) {
+    // Событие заканчивается на следующий день
+    const date = new Date(eventDateStr);
+    date.setDate(date.getDate() + 1);
+    endDateStr = date.toISOString().slice(0, 10);
+  }
+
+  const endTime = new Date(endDateStr + 'T' + endTimeStr + ':00');
   const now = new Date();
-  const currentTime = now.getHours() * 60 + now.getMinutes();
 
-  // Парсим время окончания (формат "HH:MM")
-  const endMatch = endTimeStr.match(/(\d{1,2}):(\d{2})/);
-  if (!endMatch) return '';
+  // Если событие ещё не закончилось, возвращаем пустую строку
+  if (endTime > now) return '';
 
-  const endHour = parseInt(endMatch[1]);
-  const endMin = parseInt(endMatch[2]);
-  const endTimeInMinutes = endHour * 60 + endMin;
+  const diffInMs = now - endTime;
+  const hours = Math.ceil(diffInMs / (1000 * 60 * 60));
 
-  // Если время окончания еще не наступило, возвращаем пустую строку
-  if (currentTime < endTimeInMinutes) return '';
-
-  const diffInMinutes = currentTime - endTimeInMinutes;
-  const hours = Math.floor(diffInMinutes / 60);
-
-  // Всегда показываем только часы, округляя в большую сторону
-  const roundedHours = Math.ceil(diffInMinutes / 60);
-
-  if (roundedHours === 1) return 'Закончилось 1 час назад';
-  if (roundedHours < 5) return `Закончилось ${roundedHours} часа назад`;
-  return `Закончилось ${roundedHours} часов назад`;
+  if (hours === 1) return 'Закончилось 1 час назад';
+  if (hours < 5) return `Закончилось ${hours} часа назад`;
+  return `Закончилось ${hours} часов назад`;
 }
 
 
@@ -851,8 +857,59 @@ function renderEventList(list) {
   const todayEvents = list.filter(event => event.date === todayStr);
   const tomorrowEvents = list.filter(event => event.date === tomorrowStr);
 
+  // Фильтруем сегодняшние события: показываем только те, что закончились не более 6 часов назад или еще не закончились
+  const filteredTodayEvents = allTodayEvents.filter(event => {
+    const timeInfo = event.text ? extractTimeFromText(event.text) : null;
+    if (!timeInfo || !timeInfo.hasEndTime) return true;
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    const endTimeStr = timeInfo.end;
+    const endMatch = endTimeStr.match(/(\d{1,2}):(\d{2})/);
+    if (!endMatch) return true;
+    const endHour = parseInt(endMatch[1]);
+    const endMin = parseInt(endMatch[2]);
+    let endTimeInMinutes = endHour * 60 + endMin;
+    // Учитываем перенос через полночь: если endHour < startHour, то событие заканчивается на следующий день
+    const startMatch = timeInfo.start.match(/(\d{1,2}):(\d{2})/);
+    if (startMatch) {
+      const startHour = parseInt(startMatch[1]);
+      if (endHour < startHour) {
+        endTimeInMinutes += 24 * 60;
+      }
+    }
+    if (currentTime < endTimeInMinutes) return true;
+    const diffInMinutes = currentTime - endTimeInMinutes;
+    return diffInMinutes <= 6 * 60;
+  });
+
+  // Добавляем события из прошлых дней, закончившиеся не более 6 часов назад
+  const now = new Date();
+  const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+  const recentPastEvents = allEvents.filter(event => {
+    if (event.date >= todayStr) return false;
+    if (!event.text) return false;
+    const timeInfo = extractTimeFromText(event.text);
+    if (!timeInfo || !timeInfo.hasEndTime) return false;
+    let endDateStr = event.date;
+    const startMatch = timeInfo.start.match(/(\d{1,2}):(\d{2})/);
+    const startHour = startMatch ? parseInt(startMatch[1]) : 0;
+    const endMatch = timeInfo.end.match(/(\d{1,2}):(\d{2})/);
+    if (!endMatch) return false;
+    const endHour = parseInt(endMatch[1]);
+    if (endHour < startHour) {
+      const date = new Date(event.date);
+      date.setDate(date.getDate() + 1);
+      endDateStr = date.toISOString().slice(0, 10);
+    }
+    const endTimeStr = endDateStr + 'T' + timeInfo.end + ':00';
+    const endTime = new Date(endTimeStr);
+    return endTime > sixHoursAgo;
+  });
+
+  const combinedTodayEvents = [...filteredTodayEvents, ...recentPastEvents].sort((a, b) => a.date.localeCompare(b.date));
+
   // Если есть события на сегодня, создаем раздел "Сегодня"
-  if (allTodayEvents.length > 0) {
+  if (combinedTodayEvents.length > 0) {
     // Создаем заголовок раздела "Сегодня"
     const todayHeader = document.createElement('div');
     todayHeader.className = 'day-section-header';
@@ -871,8 +928,8 @@ function renderEventList(list) {
     todayHeader.textContent = 'Сегодня';
     listContainer.appendChild(todayHeader);
 
-    // Добавляем все сегодняшние события
-    allTodayEvents.forEach(event => {
+    // Добавляем отфильтрованные сегодняшние события
+    combinedTodayEvents.forEach(event => {
       const item = document.createElement('div');
       item.className = 'item';
       item.dataset.eventId = event.id;
@@ -882,7 +939,7 @@ function renderEventList(list) {
 
       // Проверяем, нужно ли показывать подпись "Закончилось n часов назад"
       const timeInfo = event.text ? extractTimeFromText(event.text) : null;
-      const showTimeAgo = timeInfo && timeInfo.hasEndTime && getTimeAgoText(timeInfo.end);
+      const showTimeAgo = timeInfo && timeInfo.hasEndTime && getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
 
       item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
 
@@ -1361,7 +1418,7 @@ loadGeocodeCache()
       if (!timeInfo || !timeInfo.hasEndTime) return true; // Без времени окончания - в upcoming
 
       // Проверяем, закончилось ли событие
-      const timeAgoText = getTimeAgoText(timeInfo.end);
+      const timeAgoText = getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
       return !timeAgoText; // Если есть текст "закончилось", то в archive, иначе в upcoming
     });
 
@@ -1376,7 +1433,7 @@ loadGeocodeCache()
       if (!timeInfo || !timeInfo.hasEndTime) return false; // Без времени окончания - не в archive
 
       // Проверяем, закончилось ли событие
-      const timeAgoText = getTimeAgoText(timeInfo.end);
+      const timeAgoText = getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
       return !!timeAgoText; // Если есть текст "закончилось", то в archive
     });
 
