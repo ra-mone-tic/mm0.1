@@ -131,7 +131,7 @@ function transliterateToEnglish(text) {
 }
 
 // Расширенные варианты транслитерации
-function generateExtendedTransliterations(text) {
+function generateTransliterations(text) {
   const results = new Set([text]);
 
   // Базовые транслитерации
@@ -143,58 +143,7 @@ function generateExtendedTransliterations(text) {
     results.add(transliterateToRussian(text));
   }
 
-  // Дополнительные варианты для английского -> русский
-  if (/[a-z]/i.test(text)) {
-    const extendedRussianMap = {
-      'a': ['а', 'я'], 'e': ['е', 'э', 'и'], 'i': ['и', 'й'], 'o': ['о', 'а'],
-      'u': ['у', 'ю', 'ю'], 'y': ['ы', 'й', 'и'], 'c': ['к', 'с'], 'g': ['г', 'ж'],
-      'h': ['х', 'г'], 'j': ['дж', 'ж'], 'k': ['к'], 'q': ['к'], 'v': ['в'],
-      'w': ['в'], 'x': ['кс', 'х'], 'z': ['з', 'ж']
-    };
-
-    let extendedText = text.toLowerCase();
-    Object.entries(extendedRussianMap).forEach(([eng, rusVariants]) => {
-      if (rusVariants.length > 1) {
-        rusVariants.forEach(variant => {
-          const variantText = extendedText.replace(new RegExp(eng, 'g'), variant);
-          if (variantText !== extendedText) {
-            results.add(variantText);
-          }
-        });
-      }
-    });
-  }
-
-  // Дополнительные варианты для русского -> английский
-  if (/[а-яё]/i.test(text)) {
-    const extendedEnglishMap = {
-      'а': ['a', 'ya'], 'е': ['e', 'ye', 'ie'], 'э': ['e'], 'и': ['i', 'y'],
-      'й': ['y', 'i'], 'о': ['o'], 'у': ['u', 'yu'], 'ы': ['y'], 'ю': ['yu', 'u'],
-      'я': ['ya', 'a'], 'к': ['k', 'c'], 'г': ['g', 'h'], 'ж': ['zh', 'j'],
-      'з': ['z'], 'х': ['kh', 'h'], 'ц': ['ts', 'c'], 'ч': ['ch'], 'ш': ['sh'],
-      'щ': ['sch', 'sh'], 'ф': ['f'], 'в': ['v', 'w'], 'п': ['p'], 'р': ['r'],
-      'с': ['s'], 'т': ['t'], 'л': ['l'], 'м': ['m'], 'н': ['n'], 'б': ['b'],
-      'д': ['d']
-    };
-
-    let extendedText = text.toLowerCase();
-    Object.entries(extendedEnglishMap).forEach(([rus, engVariants]) => {
-      if (engVariants.length > 1) {
-        engVariants.forEach(variant => {
-          const variantText = extendedText.replace(new RegExp(rus, 'g'), variant);
-          if (variantText !== extendedText) {
-            results.add(variantText);
-          }
-        });
-      }
-    });
-  }
-
   return Array.from(results);
-}
-
-function generateTransliterations(text) {
-  return generateExtendedTransliterations(text);
 }
 
 function extractTimeFromText(text) {
