@@ -752,6 +752,62 @@ function updateArchiveButtonLabel() {
   archiveButton.textContent = showingArchive ? 'Назад' : 'Архив';
 }
 
+function createSectionHeader(title, isToday = false, isTomorrow = false) {
+  const header = document.createElement('div');
+  header.className = 'day-section-header';
+  header.style.cssText = `
+    margin: 16px 0 8px 0;
+    padding: 4px 8px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-1);
+    border-left: 3px solid var(--brand);
+  `;
+
+  if (isToday) {
+    header.style.cssText += `
+      color: var(--brand);
+      background: color-mix(in srgb, var(--brand) 10%, var(--surface-2));
+    `;
+  } else if (isTomorrow) {
+    header.style.cssText += `
+      color: var(--text-1);
+      background: var(--surface-2);
+    `;
+  }
+
+  header.textContent = title;
+  return header;
+}
+
+function createEventItem(event, showTimeAgo = false) {
+  const item = document.createElement('div');
+  item.className = 'item';
+  item.dataset.eventId = event.id;
+  item.dataset.eventDate = event.date;
+  item.setAttribute('role', 'button');
+  item.tabIndex = 0;
+  item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
+
+  const activate = () => {
+    focusEventOnMap(event);
+  };
+
+  item.addEventListener('click', activate);
+  item.addEventListener('keydown', evt => {
+    if (evt.key === 'Enter' || evt.key === ' ') {
+      evt.preventDefault();
+      activate();
+    }
+  });
+
+  return item;
+}
+
 function renderEventList(list) {
   if (!listContainer) return;
 
@@ -763,54 +819,22 @@ function renderEventList(list) {
 
   // Если показываем архив, то просто сортируем по дате от новых к старым без группировки
   if (showingArchive) {
-    // Сортируем события по дате (от новых к старым)
     const sortedEvents = list.sort((a, b) => b.date.localeCompare(a.date));
-
-    sortedEvents.forEach(event => {
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.dataset.eventId = event.id;
-      item.dataset.eventDate = event.date;
-      item.setAttribute('role', 'button');
-      item.tabIndex = 0;
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text)}</i>`;
-
-      const activate = () => {
-        focusEventOnMap(event);
-      };
-
-      item.addEventListener('click', activate);
-      item.addEventListener('keydown', evt => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          activate();
-        }
-      });
-      listContainer.appendChild(item);
-    });
-
+    sortedEvents.forEach(event => listContainer.appendChild(createEventItem(event)));
     return;
   }
 
   // Логика для предстоящих событий (не архив)
+  const now = new Date();
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
-
-  // Получаем завтрашнюю дату
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().slice(0, 10);
 
-  // Получаем все сегодняшние события (как из upcoming, так и из archive)
-  const allTodayEvents = allEvents.filter(event => event.date === todayStr);
-  const todayEvents = list.filter(event => event.date === todayStr);
-  const tomorrowEvents = list.filter(event => event.date === tomorrowStr);
-
-  // Фильтруем сегодняшние события: показываем только те, что закончились не более 6 часов назад или еще не закончились
-  const filteredTodayEvents = allTodayEvents.filter(event => {
+  const filteredTodayEvents = allEvents.filter(event => event.date === todayStr).filter(event => {
     const timeInfo = event.text ? extractTimeFromText(event.text) : null;
     if (!timeInfo || !timeInfo.hasEndTime) return true;
-    const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
     const endTimeStr = timeInfo.end;
     const endMatch = endTimeStr.match(/(\d{1,2}):(\d{2})/);
@@ -818,26 +842,18 @@ function renderEventList(list) {
     const endHour = parseInt(endMatch[1]);
     const endMin = parseInt(endMatch[2]);
     let endTimeInMinutes = endHour * 60 + endMin;
-    // Учитываем перенос через полночь: если endHour < startHour, то событие заканчивается на следующий день
     const startMatch = timeInfo.start.match(/(\d{1,2}):(\d{2})/);
-    if (startMatch) {
-      const startHour = parseInt(startMatch[1]);
-      if (endHour < startHour) {
-        endTimeInMinutes += 24 * 60;
-      }
+    if (startMatch && endHour < parseInt(startMatch[1])) {
+      endTimeInMinutes += 24 * 60;
     }
     if (currentTime < endTimeInMinutes) return true;
-    const diffInMinutes = currentTime - endTimeInMinutes;
-    return diffInMinutes <= 6 * 60;
+    return (currentTime - endTimeInMinutes) <= 6 * 60;
   });
 
-  // Добавляем события из прошлых дней, закончившиеся не более 6 часов назад
-  const now = new Date();
   const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
   const recentPastEvents = allEvents.filter(event => {
     if (event.date >= todayStr) return false;
-    if (!event.text) return false;
-    const timeInfo = extractTimeFromText(event.text);
+    const timeInfo = event.text ? extractTimeFromText(event.text) : null;
     if (!timeInfo || !timeInfo.hasEndTime) return false;
     let endDateStr = event.date;
     const startMatch = timeInfo.start.match(/(\d{1,2}):(\d{2})/);
@@ -850,173 +866,44 @@ function renderEventList(list) {
       date.setDate(date.getDate() + 1);
       endDateStr = date.toISOString().slice(0, 10);
     }
-    const endTimeStr = endDateStr + 'T' + timeInfo.end + ':00';
-    const endTime = new Date(endTimeStr);
+    const endTime = new Date(endDateStr + 'T' + timeInfo.end + ':00');
     return endTime > sixHoursAgo;
   });
 
   const combinedTodayEvents = [...filteredTodayEvents, ...recentPastEvents].sort((a, b) => a.date.localeCompare(b.date));
-
-  // Если есть события на сегодня, создаем раздел "Сегодня"
-  if (combinedTodayEvents.length > 0) {
-    // Создаем заголовок раздела "Сегодня"
-    const todayHeader = document.createElement('div');
-    todayHeader.className = 'day-section-header';
-    todayHeader.style.cssText = `
-      margin: 16px 0 8px 0;
-      padding: 4px 8px;
-      background: color-mix(in srgb, var(--brand) 10%, var(--surface-2));
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--brand);
-      border-left: 3px solid var(--brand);
-    `;
-    todayHeader.textContent = 'Сегодня';
-    listContainer.appendChild(todayHeader);
-
-    // Добавляем отфильтрованные сегодняшние события
-    combinedTodayEvents.forEach(event => {
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.dataset.eventId = event.id;
-      item.dataset.eventDate = event.date;
-      item.setAttribute('role', 'button');
-      item.tabIndex = 0;
-
-      // Проверяем, нужно ли показывать подпись "Закончилось n часов назад"
-      const timeInfo = event.text ? extractTimeFromText(event.text) : null;
-      const showTimeAgo = timeInfo && timeInfo.hasEndTime && getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
-
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
-
-      const activate = () => {
-        focusEventOnMap(event);
-      };
-
-      item.addEventListener('click', activate);
-      item.addEventListener('keydown', evt => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          activate();
-        }
-      });
-      listContainer.appendChild(item);
-    });
-  }
-
-  // Если есть события на завтра, создаем раздел "Завтра"
-  if (tomorrowEvents.length > 0) {
-    // Создаем заголовок раздела "Завтра"
-    const tomorrowHeader = document.createElement('div');
-    tomorrowHeader.className = 'day-section-header';
-    tomorrowHeader.style.cssText = `
-      margin: 16px 0 8px 0;
-      padding: 4px 8px;
-      background: var(--surface-2);
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-1);
-      border-left: 3px solid var(--brand);
-    `;
-    tomorrowHeader.textContent = 'Завтра';
-    listContainer.appendChild(tomorrowHeader);
-
-    // Добавляем события на завтра
-    tomorrowEvents.forEach(event => {
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.dataset.eventId = event.id;
-      item.dataset.eventDate = event.date;
-      item.setAttribute('role', 'button');
-      item.tabIndex = 0;
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text)}</i>`;
-
-      const activate = () => {
-        focusEventOnMap(event);
-      };
-
-      item.addEventListener('click', activate);
-      item.addEventListener('keydown', evt => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          activate();
-        }
-      });
-      listContainer.appendChild(item);
-    });
-  }
-
-  // Для остальных событий: сортируем по дате и показываем с заголовками дней недели
+  const tomorrowEvents = list.filter(event => event.date === tomorrowStr);
   const otherEvents = list.filter(event => event.date !== todayStr && event.date !== tomorrowStr);
 
-  if (otherEvents.length > 0) {
-    // Сортируем события по дате (от старых к новым)
-    const sortedEvents = otherEvents.sort((a, b) => a.date.localeCompare(b.date));
+  // Добавляем разделы с событиями
+  if (combinedTodayEvents.length > 0) {
+    listContainer.appendChild(createSectionHeader('Сегодня', true));
+    combinedTodayEvents.forEach(event => {
+      const timeInfo = event.text ? extractTimeFromText(event.text) : null;
+      const showTimeAgo = timeInfo && timeInfo.hasEndTime && getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
+      listContainer.appendChild(createEventItem(event, showTimeAgo));
+    });
+  }
 
+  if (tomorrowEvents.length > 0) {
+    listContainer.appendChild(createSectionHeader('Завтра'));
+    tomorrowEvents.forEach(event => listContainer.appendChild(createEventItem(event)));
+  }
+
+  if (otherEvents.length > 0) {
+    const sortedEvents = otherEvents.sort((a, b) => a.date.localeCompare(b.date));
     let lastDayName = '';
+    const todayIndex = today.getDay();
 
     sortedEvents.forEach(event => {
       const dayOfWeek = getDayOfWeekFromDate(event.date);
       const dayName = getDayOfWeekName(dayOfWeek);
 
-      // Показываем заголовок дня недели только если он изменился
       if (dayName !== lastDayName) {
-        // Создаем заголовок раздела
-        const sectionHeader = document.createElement('div');
-        sectionHeader.className = 'day-section-header';
-        sectionHeader.style.cssText = `
-          margin: 16px 0 8px 0;
-          padding: 4px 8px;
-          background: var(--surface-2);
-          border-radius: var(--radius-sm);
-          font-size: 12px;
-          font-weight: bold;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: var(--text-1);
-          border-left: 3px solid var(--brand);
-        `;
-
-        // Если это текущий день недели, выделяем заголовок
-        const todayIndex = today.getDay();
-        const isToday = dayOfWeek === todayIndex;
-        if (isToday) {
-          sectionHeader.style.color = 'var(--brand)';
-          sectionHeader.style.background = 'color-mix(in srgb, var(--brand) 10%, var(--surface-2))';
-        }
-
-        sectionHeader.textContent = dayName;
-        listContainer.appendChild(sectionHeader);
+        listContainer.appendChild(createSectionHeader(dayName, dayOfWeek === todayIndex));
         lastDayName = dayName;
       }
 
-      // Добавляем событие
-      const item = document.createElement('div');
-      item.className = 'item';
-      item.dataset.eventId = event.id;
-      item.dataset.eventDate = event.date;
-      item.setAttribute('role', 'button');
-      item.tabIndex = 0;
-      item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text)}</i>`;
-
-      const activate = () => {
-        focusEventOnMap(event);
-      };
-
-      item.addEventListener('click', activate);
-      item.addEventListener('keydown', evt => {
-        if (evt.key === 'Enter' || evt.key === ' ') {
-          evt.preventDefault();
-          activate();
-        }
-      });
-      listContainer.appendChild(item);
+      listContainer.appendChild(createEventItem(event));
     });
   }
 }
