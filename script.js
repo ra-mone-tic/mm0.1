@@ -793,18 +793,6 @@ function createEventItem(event, showTimeAgo = false) {
   item.tabIndex = 0;
   item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
 
-  const activate = () => {
-    focusEventOnMap(event);
-  };
-
-  item.addEventListener('click', activate);
-  item.addEventListener('keydown', evt => {
-    if (evt.key === 'Enter' || evt.key === ' ') {
-      evt.preventDefault();
-      activate();
-    }
-  });
-
   return item;
 }
 
@@ -994,41 +982,6 @@ function renderSearchResults(query = '') {
     item.tabIndex = 0;
     item.innerHTML = `<strong>${event.title}</strong><span>${event.location}</span><span>${getEventDateLabel(event.date, event.text)}</span>`;
 
-    const activate = () => {
-      ensureListForEvent(event);
-      focusEventOnMap(event);
-      closeSearchPanel();
-    };
-
-    item.addEventListener('click', activate);
-    item.addEventListener('keydown', evt => {
-      if (evt.key === 'Enter' || evt.key === ' ') {
-        evt.preventDefault();
-        activate();
-        return;
-      }
-      if (evt.key === 'ArrowDown') {
-        evt.preventDefault();
-        const next = item.nextElementSibling || searchResults.firstElementChild;
-        if (next) {
-          next.focus();
-        }
-      }
-      if (evt.key === 'ArrowUp') {
-        evt.preventDefault();
-        const prev = item.previousElementSibling;
-        if (prev) {
-          prev.focus();
-        } else if (searchInput) {
-          searchInput.focus();
-        }
-      }
-      if (evt.key === 'Escape') {
-        closeSearchPanel();
-        searchInput?.focus();
-      }
-    });
-
     searchResults.appendChild(item);
   });
 }
@@ -1200,6 +1153,80 @@ document.addEventListener('click', event => {
     closeSidebarPanel();
   }
 });
+
+// Делегированные обработчики кликов для списка событий
+if (listContainer) {
+  listContainer.addEventListener('click', event => {
+    const item = event.target.closest('.item');
+    if (!item) return;
+    const eventData = allEvents.find(ev => ev.id === item.dataset.eventId);
+    if (eventData) {
+      focusEventOnMap(eventData);
+      highlightEventInSidebar(eventData.id);
+    }
+  });
+
+  listContainer.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const item = event.target.closest('.item');
+    if (!item) return;
+    event.preventDefault();
+    const eventData = allEvents.find(ev => ev.id === item.dataset.eventId);
+    if (eventData) {
+      focusEventOnMap(eventData);
+      highlightEventInSidebar(eventData.id);
+    }
+  });
+}
+
+// Делегированные обработчики кликов для результатов поиска
+if (searchResults) {
+  searchResults.addEventListener('click', event => {
+    const li = event.target.closest('li');
+    if (!li) return;
+    const eventData = allEvents.find(ev => ev.id === li.dataset.eventId);
+    if (eventData) {
+      ensureListForEvent(eventData);
+      focusEventOnMap(eventData);
+      closeSearchPanel();
+    }
+  });
+
+  searchResults.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const li = event.target;
+      if (!li || li.tagName !== 'LI') return;
+      const eventData = allEvents.find(ev => ev.id === li.dataset.eventId);
+      if (eventData) {
+        ensureListForEvent(eventData);
+        focusEventOnMap(eventData);
+        closeSearchPanel();
+      }
+      return;
+    }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      const next = event.target.nextElementSibling || searchResults.firstElementChild;
+      if (next) {
+        next.focus();
+      }
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      const prev = event.target.previousElementSibling;
+      if (prev) {
+        prev.focus();
+      } else if (searchInput) {
+        searchInput.focus();
+      }
+    }
+    if (event.key === 'Escape') {
+      closeSearchPanel();
+      searchInput?.focus();
+    }
+  });
+}
 
 // Загружаем данные последовательно: сначала кэш, затем события
 loadGeocodeCache()
