@@ -555,12 +555,11 @@ function popupTemplate(event) {
   postText = postText.replace(/#[^\s#]+/g, '').trim();
   postText = postText.replace(/^.*\n/, '').trim();
 
-  // Показываем только первые 90 символов в свернутом виде
+  // Проверяем, нужно ли показывать ручку для разворачивания
   const COLLAPSED_LIMIT = 90;
   const isLong = postText.length > COLLAPSED_LIMIT;
-  const shortText = isLong ? postText.slice(0, COLLAPSED_LIMIT) : postText;
 
-  // Новая ручка - только одна полоска внизу
+  // Ручка для разворачивания поп-апа
   const handle = isLong ? '<div class="popup-handle" style="position:absolute;bottom:0;left:0;right:0;height:8px;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;"><div style="width:46px;height:5px;border-radius:999px;background:color-mix(in srgb, var(--text-1) 25%, transparent);"></div></div>' : '';
 
   return `
@@ -568,8 +567,8 @@ function popupTemplate(event) {
       <div><strong>${event.title}</strong></div>
       <div>${formatLocation(event.location)}</div>
       <div style="color:var(--text-1);">${getEventDateLabel(event.date, event.text)}</div>
-      <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow:hidden;position:relative;">
-        <span class="popup-text-short">${shortText}${isLong ? '…' : ''}</span>
+      <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow-y:scroll;position:relative;">
+        ${postText.replace(/\n/g, '<br>')}
       </div>
       <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText.replace(/\n/g, '<br>')}</div>
       ${handle}
@@ -588,20 +587,20 @@ function addMarker(event) {
   let popupState = { expanded: false };
 
   function toggleText(popupEl) {
-    const shortText = popupEl.querySelector('.popup-text-short');
+    const mainText = popupEl.querySelector('.popup-text');
     const fullText = popupEl.querySelector('.popup-text-full');
     const handle = popupEl.querySelector('.popup-handle');
 
-    if (!shortText || !fullText) return;
+    if (!mainText || !fullText) return;
 
     if (popupState.expanded) {
       // Свернуть
-      shortText.style.display = 'inline';
+      mainText.style.display = 'block';
       fullText.style.display = 'none';
       popupState.expanded = false;
     } else {
       // Развернуть
-      shortText.style.display = 'none';
+      mainText.style.display = 'none';
       fullText.style.display = 'block';
       popupState.expanded = true;
     }
@@ -622,10 +621,10 @@ function addMarker(event) {
     if (!popupEl) return;
 
     // Сбрасываем состояние при закрытии
-    const shortText = popupEl.querySelector('.popup-text-short');
+    const mainText = popupEl.querySelector('.popup-text');
     const fullText = popupEl.querySelector('.popup-text-full');
-    if (shortText && fullText) {
-      shortText.style.display = 'inline';
+    if (mainText && fullText) {
+      mainText.style.display = 'block';
       fullText.style.display = 'none';
       popupState.expanded = false;
     }
