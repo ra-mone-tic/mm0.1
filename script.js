@@ -1028,6 +1028,10 @@ function renderSearchResults(query = '') {
 
 function openSearchPanel() {
   if (!searchPanel || searchPanelOpen) return;
+
+  // Закрываем все открытые попапы, аналогично toggleSidebar
+  markers.forEach(marker => marker.getPopup()?.remove());
+
   updateBottomBarOffset();
   searchPanel.classList.add('open');
   searchPanel.setAttribute('aria-hidden', 'false');
