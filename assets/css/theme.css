@@ -155,7 +155,7 @@ html[data-theme="amoled"] input[type="date"]{
 *::-webkit-scrollbar-track{ background:var(--surface-2); }
 *::-webkit-scrollbar-thumb{ background:color-mix(in srgb, var(--brand) 35%, transparent); border-radius:10px; }
 
-/* 5) Themes (A–F) */
+/* 5) Themes */
 /* A) Minimal / Моно-минимал */
 html[data-theme="minimal"]{
   --surface-0:#ffffff; --surface-1:#d2cde77e; --surface-2:#eef1f5;
@@ -165,15 +165,7 @@ html[data-theme="minimal"]{
   --shadow-md: 0 0 16px #22d3ee, 0 0 32px #f472b6;
 }
 
-/* B) Modern Neutral / Современный нейтрал */
-html[data-theme="modern"]{
-  --surface-0:#fbfbfc; --surface-1:#ffffff; --surface-2:#eef0f3;
-  --text-0:#121417; --text-1:#5c6570;
-  --brand:#3b82f6; --accent:#8b5cf6; /* blue+violet duet */
-  --radius-sm:10px; --radius-md:14px; --shadow-sm:0 2px 8px rgba(15,23,42,.06);
-}
-
-/* C) Neon Pulse / Молодёжный неон (glass) */
+/* B) Neon Pulse / Молодёжный неон (glass) */
 html[data-theme="neon"]{
   --surface-0:#0a0b0f; --surface-1:rgba(18,20,28,.68); --surface-2:rgba(36,40,58,.6);
   --text-0:#e9ecff; --text-1:#aab1c9;
@@ -188,35 +180,6 @@ html[data-theme="neon"] .btn-primary{
   background:linear-gradient(135deg,var(--brand),var(--accent));
   border-color:transparent;
   box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 10px 30px rgba(0,0,0,.45);
-}
-
-/* D) Paper Map / Бумажная афиша */
-html[data-theme="paper"]{
-  --surface-0:#f7f3ee; --surface-1:#fffdfa; --surface-2:#efe8de;
-  --text-0:#2a2420; --text-1:#6b5e54;
-  --brand:#d26b2b; --accent:#2f7f66;
-  --border:1px solid #e0d7cc; --radius-sm:6px; --shadow-sm:0 1px 0 rgba(0,0,0,.06);
-}
-html[data-theme="paper"] h1,html[data-theme="paper"] h2,html[data-theme="paper"] h3,html[data-theme="paper"] h4,html[data-theme="paper"] h5,html[data-theme="paper"] h6{
-  font-family: Georgia, 'Times New Roman', serif;
-}
-html[data-theme="paper"] #sidebar .item{ border-bottom-style:dashed; }
-
-/* E) AMOLED Night / Глубокий чёрный */
-html[data-theme="amoled"]{
-  --surface-0:#000; --surface-1:#0a0a0a; --surface-2:#121212;
-  --text-0:#eaeaea; --text-1:#a1a1a1;
-  --brand:#4dabf7; --accent:#7cddc3;
-  --border:1px solid #1a1a1a; --shadow-md:none; /* pure black, no halos */
-}
-html[data-theme="amoled"]{ --date-icon-filter: invert(1) brightness(1.1); }
-
-/* F) High Contrast / Доступность */
-html[data-theme="a11y"]{
-  --surface-0:#ffffff; --surface-1:#ffffff; --surface-2:#e5e5e5;
-  --text-0:#000000; --text-1:#1a1a1a;
-  --brand:#0039a6; --accent:#007f00; --danger:#9b0000;
-  --border:2px solid #000; --radius-sm:4px;
 }
 
 
