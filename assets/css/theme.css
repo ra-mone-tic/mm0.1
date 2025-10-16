@@ -148,6 +148,14 @@ html[data-theme="amoled"] input[type="date"]{
 .popup-text-full {
   max-height: 160px;
   overflow: auto;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word; /* fallback for old browsers */
+}
+.popup-text {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  word-wrap: break-word; /* fallback for old browsers */
 }
 
 /* 4) Scrollbar (webkit) */
@@ -181,9 +189,19 @@ html[data-theme="neon"] .btn-primary{
   border-color:transparent;
   box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 10px 30px rgba(0,0,0,.45);
 }
+/* neon popup buttons */
+html[data-theme="neon"] button.expand-btn,
+html[data-theme="neon"] button.share-btn {
+  background: #2B2A29 !important;
+  color: var(--text-0) !important;
+}
+html[data-theme="neon"] button.expand-btn:hover,
+html[data-theme="neon"] button.share-btn:hover {
+  background: color-mix(in srgb, #2B2A29 85%, #0a0b0f) !important;
+}
 
 
-html[data-theme='modern'] #sidebar{ background: rgba(255,255,255,.85); backdrop-filter: saturate(1.2) blur(6px); }
+/* Стилей для неактуальных тем не осталось */
 
 /* Непрозрачный футер сайдбара для тем minimal и neon */
 html[data-theme="minimal"] .sidebar-footer {
