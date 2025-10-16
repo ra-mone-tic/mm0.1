@@ -296,7 +296,7 @@ function getTimeAgoText(eventDateStr, endTimeStr, startTimeStr) {
 
 const mapContainer = document.getElementById('map');
 if (!window.maplibregl || !maplibregl.supported()) {
-  mapContainer.innerHTML = '<p style="padding:16px;">MapLibre требует поддержки WebGL. Обновите браузер или включите аппаратное ускорение.</p>';
+  mapContainer.innerHTML = '<p style="padding:16px; font-family: \'NTSomic\', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;">MapLibre требует поддержки WebGL. Обновите браузер или включите аппаратное ускорение.</p>';
   throw new Error('MapLibre is not supported in this environment');
 }
 
@@ -545,25 +545,65 @@ function popupTemplate(event) {
   const shareButton = `
     <button class="share-btn"
       type="button"
-      title="Скопировать ссылку"
       onclick="window.copyShareLink('${event.id}')"
-      style="position:absolute;right:16px;bottom:8px;border:var(--border);background:var(--surface-2);border-radius:var(--radius-xs);padding:4px 6px;cursor:pointer;font-size:14px;line-height:1;color:var(--text-0);z-index:10;"
-    >🔗</button>`;
+      style="
+        position: absolute;
+        right: 22px;
+        bottom: 1px;
+      padding: 4px 10px;
+      background: #d2cde7;
+      color: black;
+      border: none;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      z-index: 10;
+      transition: background var(--fx-fast);
+      box-shadow: var(--shadow-sm);
+      outline: none;
+      "
+      onmouseover="this.style.background='color-mix(in srgb, #d2cde7 85%, black)'"
+      onmouseout="this.style.background='#d2cde7'"
+    >Поделиться</button>`;
 
   // Текст поста (без хештегов, даты и заголовка)
   let postText = event.text || '';
   postText = postText.replace(/#[^\s#]+/g, '').trim();
   postText = postText.replace(/^.*\n/, '').trim();
 
-  // Проверяем, нужно ли показывать ручку для разворачивания
+  // Проверяем, нужно ли показывать кнопку для разворачивания
   const COLLAPSED_LIMIT = 90;
   const isLong = postText.length > COLLAPSED_LIMIT;
 
-  // Ручка для разворачивания поп-апа
-  const handle = isLong ? '<div class="popup-handle" style="position:absolute;bottom:0;left:0;right:0;height:8px;cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;"><div style="width:46px;height:5px;border-radius:999px;background:color-mix(in srgb, var(--text-1) 25%, transparent);"></div></div>' : '';
+  // Овальная кнопка "Узнать больше" в левом нижнем углу
+  const expandButton = isLong ? `<button class="expand-btn"
+    type="button"
+    style="
+      position: absolute;
+      bottom: 1px;
+      left: 8px;
+      padding: 4px 10px;
+      background: #d2cde7;
+      color: black;
+      border: none;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+      font-family: var(--font-ui);
+      cursor: pointer;
+      z-index: 10;
+      transition: background var(--fx-fast);
+      box-shadow: var(--shadow-sm);
+      outline: none;
+    "
+    onmouseover="this.style.background='color-mix(in srgb, #d2cde7 85%, black)'"
+    onmouseout="this.style.background='#d2cde7'"
+  >Узнать больше</button>` : '';
 
   return `
-    <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;">
+    <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;font-family:var(--font-ui);">
       <div><strong>${event.title}</strong></div>
       <div>${formatLocation(event.location)}</div>
       <div style="color:var(--text-1);">${getEventDateLabel(event.date, event.text)}</div>
@@ -571,7 +611,7 @@ function popupTemplate(event) {
         ${postText.replace(/\n/g, '<br>')}
       </div>
       <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText.replace(/\n/g, '<br>')}</div>
-      ${handle}
+      ${expandButton}
       ${shareButton}
     </div>
   `;
@@ -610,9 +650,10 @@ function addMarker(event) {
     const popupEl = popup.getElement();
     if (!popupEl) return;
 
-    const handle = popupEl.querySelector('.popup-handle');
-    if (handle) {
-      handle.onclick = () => toggleText(popupEl);
+    // Обработчик для кнопки "Узнать больше"
+    const expandBtn = popupEl.querySelector('.expand-btn');
+    if (expandBtn) {
+      expandBtn.onclick = () => toggleText(popupEl);
     }
   });
 
