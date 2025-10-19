@@ -262,7 +262,7 @@ html[data-theme="neon"] .sidebar-footer {
   left: 0;
   z-index: 2000;
   animation: calendar-fade-in var(--fx-fast) ease-out;
-  margin-top: 4px;
+  margin-top: 16px;
   transform-origin: top left;
 }
 
@@ -393,24 +393,14 @@ html[data-theme="neon"] .sidebar-footer {
 }
 
 .calendar__day--selected {
-  background: color-mix(in srgb, var(--brand) 85%, transparent);
-  border: 2px solid var(--brand);
+  position: relative;
+  border: 2px solid #2B2A29 !important;
 }
 
 .calendar__day--today {
   position: relative;
-}
-
-.calendar__day--today::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px;
-  height: 4px;
-  background: var(--brand);
-  border-radius: 50%;
+  background: var(--surface-2);
+  border: none;
 }
 
 .calendar__day--disabled {

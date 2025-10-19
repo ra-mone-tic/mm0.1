@@ -1446,7 +1446,7 @@ class Calendar {
 
   show(date = new Date()) {
     this.currentDate = new Date(date);
-    this.selectedDate = null;
+    // Не обнуляем selectedDate, чтобы сохранять выбранную дату
     this.render();
     this.positionCalendar();
 
