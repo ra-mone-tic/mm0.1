@@ -27,6 +27,7 @@
   --surface-2:#eceef1;     /* hover/bg subtle */
   --text-0:#0f1222;        /* primary text */
   --text-1:#5c6370;        /* secondary */
+  --text-2:#d1d5db;        /* tertiary */
   --brand:#2f7ef7;         /* brand/primary */
   --accent:#22b07d;        /* secondary accent */
   --danger:#e0565b; --warn:#f2b01d; --ok:#2db84d;
@@ -70,10 +71,10 @@ button:focus-visible, [role="button"]:focus-visible, a:focus-visible, input:focu
 
 /* Поля ввода даты — стили зависят от темы */
 input[type="date"]{
-  background:var(--surface-1);
+  background:#d2cde7;
   color:var(--text-0);
-  border:var(--border);
-  border-radius:var(--radius-sm);
+  border:none;
+  border-radius:9999px;
   padding:.5rem .75rem;
   accent-color: var(--brand);
   color-scheme: light; /* светлый календарь по умолчанию */
@@ -82,21 +83,20 @@ input[type="date"]{
   cursor:pointer;
   transition: all var(--fx-fast);
   box-shadow: var(--shadow-sm);
-  min-height:44px;
+  min-height:30px;
+  min-width:160px;
   /* Полностью отключаем системный календарь браузера */
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
 }
 input[type="date"]:hover{
-  background:var(--surface-2);
-  border-color: color-mix(in srgb, var(--brand) 30%, var(--text-1));
+  background: color-mix(in srgb, #d2cde7 90%, transparent);
 }
 input[type="date"]:focus{
   outline:3px solid color-mix(in srgb, var(--brand) 55%, transparent);
   outline-offset:2px;
-  border-color: var(--brand);
-  background:var(--surface-2);
+  background: color-mix(in srgb, #d2cde7 90%, transparent);
 }
 input[type="date"]::-webkit-calendar-picker-indicator{
   display: none;
@@ -192,7 +192,7 @@ html[data-theme="amoled"] input[type="date"]{
 /* A) Minimal / Моно-минимал */
 html[data-theme="minimal"]{
   --surface-0:#ffffff; --surface-1:#d2cde77e; --surface-2:#eef1f5;
-  --text-0:#0f1222; --text-1:#6a7280;
+  --text-0:#2B2A29; --text-1:#6B7280; --text-2:#D1D5DB;
   --brand:#2f7ef7; --accent:#22b07d;
   --radius-sm:8px; --radius-md:12px;
   --shadow-md: 0 0 16px #22d3ee, 0 0 32px #f472b6;
@@ -223,6 +223,16 @@ html[data-theme="neon"] button.share-btn {
 html[data-theme="neon"] button.expand-btn:hover,
 html[data-theme="neon"] button.share-btn:hover {
   background: color-mix(in srgb, #2B2A29 85%, #0a0b0f) !important;
+}
+
+/* minimal popup buttons */
+html[data-theme="minimal"] button.expand-btn,
+html[data-theme="minimal"] button.share-btn {
+  color: var(--text-0) !important;
+}
+html[data-theme="minimal"] button.expand-btn:hover,
+html[data-theme="minimal"] button.share-btn:hover {
+  background: color-mix(in srgb, #d2cde7 85%, white) !important;
 }
 
 /* Calendar styles for neon theme */

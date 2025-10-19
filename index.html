@@ -62,30 +62,34 @@
     }
 
     input[type="date"] {
-      font-size: 16px;
-      min-height: 44px;
-      padding: 8px 12px;
-      border-radius: var(--radius-sm);
-      border: var(--border);
-      background: var(--surface-0);
-      cursor: pointer;
-      outline: none;
-      box-shadow: var(--shadow-sm);
+      background:#d2cde7;
+      color:var(--text-0);
+      border:none;
+      border-radius:9999px;
+      padding:.5rem .75rem;
+      accent-color: var(--brand);
+      color-scheme: light;
+      font-family:var(--font-ui);
+      font-size:16px;
+      cursor:pointer;
       transition: all var(--fx-fast);
-      /* Отключаем системный календарь браузера */
+      box-shadow: var(--shadow-sm);
+      min-height:44px;
+      min-width:160px;
+      text-align: center;
+      /* Полностью отключаем системный календарь браузера */
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
+      outline: none;
     }
     input[type="date"]:hover {
-      background: var(--surface-2);
-      border-color: color-mix(in srgb, var(--brand) 30%, var(--text-1));
+      background: color-mix(in srgb, #d2cde7 90%, transparent);
     }
     input[type="date"]:focus {
-      outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
-      outline-offset: 2px;
-      border-color: var(--brand);
-      background: var(--surface-2);
+      outline:3px solid color-mix(in srgb, var(--brand) 55%, transparent);
+      outline-offset:2px;
+      background: color-mix(in srgb, #d2cde7 90%, transparent);
     }
     /* Скрываем стрелку календаря в Firefox */
     input[type="date"]::-webkit-calendar-picker-indicator {
@@ -426,7 +430,6 @@
 <body>
   <div id="controls">
     <div class="date-input-container">
-      <label for="event-date">Выбери дату</label>
       <input type="date" id="event-date">
     </div>
     <img id="logo" src="https://thumbs.dreamstime.com/b/cat-builder-holding-drill-white-background-cat-builder-drill-123551503.jpg" alt="Meow Records">

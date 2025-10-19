@@ -605,7 +605,7 @@ function popupTemplate(event) {
   return `
     <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;font-family:var(--font-ui);">
       <div><strong>${event.title}</strong></div>
-      <div>${formatLocation(event.location)}</div>
+      <div style="color:var(--text-1);">${formatLocation(event.location)}</div>
       <div style="color:var(--text-1);">${getEventDateLabel(event.date, event.text)}</div>
       <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow-y:scroll;position:relative;">
         ${postText.replace(/\n/g, '<br>')}
@@ -819,7 +819,7 @@ function createEventItem(event, showTimeAgo = false) {
   item.dataset.eventDate = event.date;
   item.setAttribute('role', 'button');
   item.tabIndex = 0;
-  item.innerHTML = `<strong>${event.title}</strong><br>${formatLocation(event.location)}<br><i>${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
+  item.innerHTML = `<strong>${event.title}</strong><br><span style="color:var(--text-1);">${formatLocation(event.location)}</span><br><i style="color:var(--text-1);">${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
 
   return item;
 }
