@@ -1549,7 +1549,8 @@ class Calendar {
       const day = document.createElement('button');
       day.className = 'calendar__day';
       day.textContent = date.getDate();
-      day.dataset.date = date.toISOString().slice(0, 10);
+      const formattedDate = date.getFullYear().toString().padStart(4, '0') + '-' + (date.getMonth() + 1).toString().padStart(2, '0') + '-' + date.getDate().toString().padStart(2, '0');
+      day.dataset.date = formattedDate;
       day.setAttribute('aria-label', date.toLocaleDateString('ru-RU', {
         weekday: 'long',
         year: 'numeric',
