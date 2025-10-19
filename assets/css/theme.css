@@ -236,6 +236,10 @@ html[data-theme="minimal"] button.share-btn:hover {
 }
 
 /* Calendar styles for neon theme */
+html[data-theme="neon"] input[type="date"] {
+  background: #2B2A29;
+}
+
 html[data-theme="neon"] .calendar__day {
   background: #2B2A29;
 }
