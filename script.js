@@ -201,25 +201,29 @@ function extractTimeFromText(text) {
   return null;
 }
 
-function getEventDateLabel(dateStr, eventText = null, showTimeAgo = false) {
+function getEventDateLabel(dateStr, eventText = null, showTimeAgo = false, showOnlyTimeForToday = false) {
   const timeStr = eventText ? extractTimeFromText(eventText) : null;
 
   if (dateStr === DEVICE_TODAY) {
-    let result = '<span style="font-weight: bold; font-style: italic;">Сегодня</span>';
+    if (showOnlyTimeForToday) {
+      return timeStr ? `<span style="font-style: italic;">${timeStr.full}</span>` : '';
+    } else {
+      let result = '<span style="font-weight: bold; font-style: italic;">Сегодня</span>';
 
-    if (timeStr) {
-      result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
-    }
-
-    // Если нужно показать "Закончилось n часов назад"
-    if (showTimeAgo && timeStr && timeStr.hasEndTime) {
-      const timeAgoText = getTimeAgoText(dateStr, timeStr.end, timeStr.start);
-      if (timeAgoText) {
-        result += `<br><span style="font-size: 11px; color: var(--text-2);">${timeAgoText}</span>`;
+      if (timeStr) {
+        result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
       }
-    }
 
-    return result;
+      // Если нужно показать "Закончилось n часов назад"
+      if (showTimeAgo && timeStr && timeStr.hasEndTime) {
+        const timeAgoText = getTimeAgoText(dateStr, timeStr.end, timeStr.start);
+        if (timeAgoText) {
+          result += `<br><span style="font-size: 11px; color: var(--text-2);">${timeAgoText}</span>`;
+        }
+      }
+
+      return result;
+    }
   }
   if (!dateStr) return '';
 
@@ -812,14 +816,14 @@ function createSectionHeader(title, isToday = false, isTomorrow = false) {
   return header;
 }
 
-function createEventItem(event, showTimeAgo = false) {
+function createEventItem(event, showTimeAgo = false, showOnlyTimeForToday = false) {
   const item = document.createElement('div');
   item.className = 'item';
   item.dataset.eventId = event.id;
   item.dataset.eventDate = event.date;
   item.setAttribute('role', 'button');
   item.tabIndex = 0;
-  item.innerHTML = `<strong>${event.title}</strong><br><span style="color:var(--text-1);">${formatLocation(event.location)}</span><br><i style="color:var(--text-1);">${getEventDateLabel(event.date, event.text, showTimeAgo)}</i>`;
+  item.innerHTML = `<strong>${event.title}</strong><br><span style="color:var(--text-1);">${formatLocation(event.location)}</span><br><i style="color:var(--text-1);">${getEventDateLabel(event.date, event.text, showTimeAgo, showOnlyTimeForToday)}</i>`;
 
   return item;
 }
@@ -896,7 +900,7 @@ function renderEventList(list) {
     combinedTodayEvents.forEach(event => {
       const timeInfo = event.text ? extractTimeFromText(event.text) : null;
       const showTimeAgo = timeInfo && timeInfo.hasEndTime && getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
-      listContainer.appendChild(createEventItem(event, showTimeAgo));
+      listContainer.appendChild(createEventItem(event, showTimeAgo, true));
     });
   }
 
