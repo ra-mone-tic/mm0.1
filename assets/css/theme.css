@@ -266,7 +266,7 @@ html[data-theme="neon"] .sidebar-footer {
   left: 0;
   z-index: 2000;
   animation: calendar-fade-in var(--fx-fast) ease-out;
-  margin-top: 16px;
+  margin-top: 21px;
   transform-origin: top left;
 }
 
