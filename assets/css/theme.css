@@ -441,15 +441,11 @@ html[data-theme="neon"] .sidebar-footer {
 @media (max-width: 480px) {
   .calendar-modal__content {
     width: 95vw;
-    max-height: 85vh;
+    max-height: 75vh;
   }
 
   .calendar {
     padding: 12px 16px 16px;
-  }
-
-  .calendar-modal__header {
-    padding: 12px 16px 8px;
   }
 
   .calendar__header {
@@ -463,6 +459,78 @@ html[data-theme="neon"] .sidebar-footer {
 
   .calendar__month-year {
     font-size: 1rem;
+  }
+
+@media (max-width: 375px) {
+  .calendar-modal__content {
+    width: 98vw;
+    max-height: 70vh;
+  }
+
+   .calendar {
+    padding: 10px 12px 14px;
+  }
+
+  .calendar__header {
+    margin-bottom: 10px;
+  }
+
+  .calendar__nav {
+    font-size: 14px;
+    padding: 3px;
+  }
+
+  .calendar__month-year {
+    font-size: 0.9rem;
+  }
+
+  .calendar__weekdays {
+    margin-bottom: 8px;
+  }
+
+  .calendar__weekday {
+    padding: 4px 2px;
+  }
+
+  .calendar__day {
+    aspect-ratio: 0.9;
+  }
+}
+
+@media (max-width: 320px) {
+  .calendar-modal__content {
+    width: 100vw;
+    max-height: 65vh;
+  }
+
+  .calendar {
+    padding: 8px 10px 12px;
+  }
+
+  .calendar__header {
+    margin-bottom: 8px;
+  }
+
+  .calendar__nav {
+    font-size: 12px;
+    padding: 2px;
+  }
+
+  .calendar__month-year {
+    font-size: 0.8rem;
+  }
+
+  .calendar__weekdays {
+    margin-bottom: 6px;
+  }
+
+  .calendar__weekday {
+    padding: 3px 1px;
+    font-size: 0.75rem;
+  }
+
+  .calendar__day {
+    aspect-ratio: 0.85;
   }
 }
 html[data-theme="neon"] .sidebar-footer {
