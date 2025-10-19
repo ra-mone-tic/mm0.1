@@ -1597,9 +1597,16 @@ if (dateInput) {
     });
   }
 
-  // Toggle-поведение: клик на поле даты открывает/закрывает календарь
+  // Toggle-поведение: клик на поле даты открывает/закрывает календарь и закрывает другие поп-апы
   dateInput.addEventListener('click', (e) => {
     e.preventDefault();
+    // Закрываем все открытые маркеры-попапы
+    markers.forEach(marker => marker.getPopup()?.remove());
+    // Закрываем поисковую панель, если открыта
+    closeSearchPanel();
+    // Закрываем сайдбар, если открыт
+    closeSidebarPanel();
+
     if (calendar.isOpen) {
       calendar.hide();
     } else {
