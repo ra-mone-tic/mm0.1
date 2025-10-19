@@ -266,7 +266,7 @@ html[data-theme="neon"] .sidebar-footer {
   left: 0;
   z-index: 2000;
   animation: calendar-fade-in var(--fx-fast) ease-out;
-  margin-top: 10px;
+  margin-top: 16px;
   transform-origin: top left;
 }
 
@@ -439,16 +439,6 @@ html[data-theme="neon"] .sidebar-footer {
 
 /* Мобильная адаптация календаря */
 @media (max-width: 480px) {
-  #logo {
-    min-height: 22px;
-  }
-
-  #burger {
-    min-height: 22px;
-    font-size: 20px;
-    padding: 4px;
-  }
-
   .calendar-modal__content {
     width: 95vw;
     max-height: 85vh;
