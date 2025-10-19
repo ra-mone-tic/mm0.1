@@ -803,13 +803,12 @@ function createSectionHeader(title, isToday = false, isTomorrow = false) {
     margin: 16px 0 8px 0;
     padding: 4px 8px;
     background: var(--surface-2);
-    border-radius: var(--radius-sm);
+    border-radius: 9999px;
     font-size: 12px;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-1);
-    border-left: 3px solid var(--brand);
   `;
 
   header.textContent = title;
