@@ -41,12 +41,28 @@
       padding-right: calc(12px + env(safe-area-inset-right));
       background: var(--surface-1);
       border-bottom: var(--border);
+      position: relative;
     }
     #layout { flex: 1; display: flex; }
     #map { flex: 1; width: 100%; height: 100%; }
+    .date-input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 0 0 160px;
+    }
+
+    .date-input-container label {
+      font-size: 12px;
+      color: var(--text-1);
+      font-weight: 500;
+      text-align: left;
+      margin: 0;
+      order: -1;
+    }
+
     input[type="date"] {
       font-size: 16px;
-      flex: 0 0 160px;
       min-height: 44px;
       padding: 8px 12px;
       border-radius: var(--radius-sm);
@@ -54,6 +70,30 @@
       background: var(--surface-0);
       cursor: pointer;
       outline: none;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--fx-fast);
+      /* Отключаем системный календарь браузера */
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+    input[type="date"]:hover {
+      background: var(--surface-2);
+      border-color: color-mix(in srgb, var(--brand) 30%, var(--text-1));
+    }
+    input[type="date"]:focus {
+      outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent);
+      outline-offset: 2px;
+      border-color: var(--brand);
+      background: var(--surface-2);
+    }
+    /* Скрываем стрелку календаря в Firefox */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      display: none;
+    }
+    input[type="date"]::-moz-focus-inner {
+      border: 0;
+      padding: 0;
     }
     #logo {
       height: 40px;
@@ -287,7 +327,9 @@
         padding: 10px 8px;
       }
       #logo { height: 30px; }
-      input[type="date"] { flex: 0 0 140px; font-size: 14px; }
+      .date-input-container { flex: 0 0 140px; }
+      input[type="date"] { font-size: 14px; }
+      .date-input-container label { font-size: 11px; }
       #sidebar hr { margin-top: 40px; }
     }
 
@@ -299,7 +341,9 @@
         flex-wrap: wrap;
       }
       #logo { height: 28px; }
-      input[type="date"] { flex: 0 0 120px; font-size: 13px; }
+      .date-input-container { flex: 0 0 120px; }
+      input[type="date"] { font-size: 13px; }
+      .date-input-container label { font-size: 10px; }
       #burger { font-size: 20px; padding: 6px; }
       #sidebar hr { margin-top: 35px; }
     }
@@ -312,9 +356,10 @@
         justify-content: space-between;
       }
       #logo { height: 24px; }
-      input[type="date"] { flex: 0 0 100px; font-size: 12px; }
+      .date-input-container { flex: 0 0 100px; }
+      input[type="date"] { font-size: 12px; }
+      .date-input-container label { font-size: 9px; }
       #burger { font-size: 18px; padding: 4px; }
-      label[for="event-date"] { font-size: 12px; }
       #sidebar hr { margin-top: 30px; }
     }
 
@@ -330,19 +375,20 @@
         align-self: center;
         order: -1;
       }
-      input[type="date"] {
+      .date-input-container {
         flex: 1;
-        min-width: 0;
+        align-self: stretch;
+      }
+      input[type="date"] {
         font-size: 12px;
+      }
+      .date-input-container label {
+        font-size: 9px;
       }
       #burger {
         align-self: flex-end;
         font-size: 16px;
         padding: 2px;
-      }
-      label[for="event-date"] {
-        font-size: 11px;
-        margin-bottom: 2px;
       }
       #sidebar hr { margin-top: 25px; }
     }
@@ -379,8 +425,10 @@
 </head>
 <body>
   <div id="controls">
-    <label for="event-date"><span aria-hidden="true">📅</span> Дата:</label>
-    <input type="date" id="event-date">
+    <div class="date-input-container">
+      <label for="event-date">Выбери дату</label>
+      <input type="date" id="event-date">
+    </div>
     <img id="logo" src="https://thumbs.dreamstime.com/b/cat-builder-holding-drill-white-background-cat-builder-drill-123551503.jpg" alt="Meow Records">
     <span id="burger" aria-label="Открыть список событий" role="button" tabindex="0">☰</span>
   </div>
@@ -421,6 +469,30 @@
   <script defer src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
   <script defer src="script.js"></script>
   <script defer src="assets/js/theme.js"></script>
+  <!-- Календарь -->
+  <div id="calendar-modal" class="calendar-modal" role="dialog" aria-modal="true" aria-labelledby="calendar-title" hidden>
+    <div class="calendar-modal__backdrop" aria-hidden="true"></div>
+    <div class="calendar-modal__content">
+      <div class="calendar">
+        <div class="calendar__header">
+          <button id="calendar-prev" class="calendar__nav calendar__nav--prev" aria-label="Предыдущий месяц">‹</button>
+          <div class="calendar__month-year"></div>
+          <button id="calendar-next" class="calendar__nav calendar__nav--next" aria-label="Следующий месяц">›</button>
+        </div>
+        <div class="calendar__weekdays">
+          <div class="calendar__weekday">Пн</div>
+          <div class="calendar__weekday">Вт</div>
+          <div class="calendar__weekday">Ср</div>
+          <div class="calendar__weekday">Чт</div>
+          <div class="calendar__weekday">Пт</div>
+          <div class="calendar__weekday">Сб</div>
+          <div class="calendar__weekday">Вс</div>
+        </div>
+        <div class="calendar__days"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="copy-toast" role="status" aria-live="polite" hidden>Ссылка скопирована</div>
 
 </body>

@@ -1380,3 +1380,254 @@ loadGeocodeCache()
       searchEmpty.hidden = false;
     }
   });
+
+// ===== Calendar Module =====
+class Calendar {
+  constructor() {
+    this.currentDate = new Date();
+    this.selectedDate = null;
+    this.modal = document.getElementById('calendar-modal');
+    this.monthYear = document.querySelector('.calendar__month-year');
+    this.daysContainer = document.querySelector('.calendar__days');
+    this.prevBtn = document.getElementById('calendar-prev');
+    this.nextBtn = document.getElementById('calendar-next');
+    this.dateInput = document.getElementById('event-date');
+    this.isOpen = false;
+
+    this.months = [
+      'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+      'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
+    ];
+
+    this.init();
+  }
+
+  init() {
+    this.bindEvents();
+    this.render();
+  }
+
+  bindEvents() {
+    if (this.prevBtn) {
+      this.prevBtn.addEventListener('click', () => this.navigateMonth(-1));
+    }
+    if (this.nextBtn) {
+      this.nextBtn.addEventListener('click', () => this.navigateMonth(1));
+    }
+    if (this.daysContainer) {
+      this.daysContainer.addEventListener('click', (e) => {
+        const day = e.target.closest('.calendar__day');
+        if (day && !day.classList.contains('calendar__day--disabled')) {
+          this.selectDate(day.dataset.date);
+        }
+      });
+    }
+
+    // Клик вне календаря для закрытия
+    document.addEventListener('click', (e) => {
+      if (this.isOpen && this.modal && !this.modal.contains(e.target) && e.target !== this.dateInput) {
+        this.hide();
+      }
+    });
+
+    // Клавиатурная навигация
+    document.addEventListener('keydown', (e) => {
+      if (this.isOpen) {
+        if (e.key === 'Escape') {
+          this.hide();
+        } else if (e.key === 'ArrowLeft') {
+          this.navigateMonth(-1);
+        } else if (e.key === 'ArrowRight') {
+          this.navigateMonth(1);
+        }
+      }
+    });
+  }
+
+  show(date = new Date()) {
+    this.currentDate = new Date(date);
+    this.selectedDate = null;
+    this.render();
+    this.positionCalendar();
+
+    if (this.modal) {
+      this.modal.hidden = false;
+      this.modal.setAttribute('aria-hidden', 'false');
+      this.isOpen = true;
+    }
+  }
+
+  hide() {
+    if (this.modal) {
+      this.modal.hidden = true;
+      this.modal.setAttribute('aria-hidden', 'true');
+      this.isOpen = false;
+    }
+  }
+
+  positionCalendar() {
+    if (!this.dateInput || !this.modal) return;
+
+    const controls = document.getElementById('controls');
+    const inputRect = this.dateInput.getBoundingClientRect();
+    const controlsRect = controls.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const calendarHeight = 400; // приблизительная высота календаря
+
+    // Позиционируем календарь относительно контейнера controls
+    const calendar = this.modal;
+    calendar.style.position = 'fixed';
+    calendar.style.left = `${inputRect.left}px`;
+    calendar.style.width = `${Math.min(inputRect.width, 320)}px`;
+
+    // Проверяем, поместится ли календарь снизу
+    if (inputRect.bottom + calendarHeight > viewportHeight) {
+      // Если не поместится снизу, позиционируем сверху
+      calendar.style.top = `${controlsRect.top - calendarHeight}px`;
+    } else {
+      // По умолчанию позиционируем снизу
+      calendar.style.top = `${inputRect.bottom + 4}px`;
+    }
+
+    // Обновляем позицию при изменении размера окна
+    window.addEventListener('resize', () => {
+      if (this.isOpen) {
+        this.positionCalendar();
+      }
+    });
+  }
+
+  navigateMonth(delta) {
+    this.currentDate.setMonth(this.currentDate.getMonth() + delta);
+    this.render();
+  }
+
+  selectDate(dateStr) {
+    if (!dateStr) return;
+
+    const date = new Date(dateStr);
+    this.selectedDate = date;
+
+    // Обновляем поле даты
+    if (dateInput) {
+      const formattedDate = date.toISOString().slice(0, 10);
+      dateInput.value = formattedDate;
+      // Триггерим событие change для обновления карты
+      dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    this.hide();
+  }
+
+  render() {
+    if (!this.monthYear || !this.daysContainer) return;
+
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth();
+
+    // Заголовок календаря
+    this.monthYear.textContent = `${this.months[month]}'${year.toString().slice(-2)}`;
+
+    // Очищаем дни
+    this.daysContainer.innerHTML = '';
+
+    // Получаем первый день месяца
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay() + 1); // Понедельник
+
+    // Получаем текущую дату для выделения
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Создаем 35 дней (5 недель) - убираем нижний ряд
+    for (let i = 0; i < 35; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+
+      const day = document.createElement('button');
+      day.className = 'calendar__day';
+      day.textContent = date.getDate();
+      day.dataset.date = date.toISOString().slice(0, 10);
+      day.setAttribute('aria-label', date.toLocaleDateString('ru-RU', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }));
+
+      // Проверяем, является ли дата текущим месяцем
+      if (date.getMonth() !== month) {
+        day.classList.add('calendar__day--other-month');
+      }
+
+      // Проверяем, является ли дата сегодняшней
+      if (date.getTime() === today.getTime()) {
+        day.classList.add('calendar__day--today');
+      }
+
+      // Проверяем, является ли дата текущей выбранной
+      if (this.selectedDate && date.toDateString() === this.selectedDate.toDateString()) {
+        day.classList.add('calendar__day--selected');
+      }
+
+      this.daysContainer.appendChild(day);
+    }
+  }
+
+  setSelectedDate(date) {
+    this.selectedDate = new Date(date);
+    this.currentDate = new Date(date);
+    this.render();
+  }
+}
+
+// Инициализация календаря
+const calendar = new Calendar();
+
+// Связываем календарь с полем даты
+if (dateInput) {
+  // Предотвращаем активацию поля даты через label
+  const dateLabel = document.querySelector('label[for="event-date"]');
+  if (dateLabel) {
+    dateLabel.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Label не должен активировать поле даты
+    });
+  }
+
+  // Toggle-поведение: клик на поле даты открывает/закрывает календарь
+  dateInput.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (calendar.isOpen) {
+      calendar.hide();
+    } else {
+      calendar.show(new Date(dateInput.value || null));
+    }
+  });
+
+  // Предотвращаем открытие системного календаря при фокусе
+  dateInput.addEventListener('focus', (e) => {
+    // Не предотвращаем фокус, но устанавливаем таймер для показа календаря
+    setTimeout(() => {
+      if (document.activeElement === dateInput) {
+        calendar.show(new Date(dateInput.value || null));
+      }
+    }, 10);
+  });
+
+  // Предотвращаем открытие системного календаря при других событиях
+  dateInput.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+  });
+
+  dateInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      calendar.show(new Date(dateInput.value || null));
+    }
+  });
+
+  // Кнопка календаря удалена по просьбе пользователя
+}
