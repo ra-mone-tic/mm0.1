@@ -207,6 +207,12 @@ html[data-theme="neon"] button.share-btn:hover {
 html[data-theme="minimal"] .sidebar-footer {
   background: #f9c5ff; /* Непрозрачный вариант surface-1 для minimal */
 }
+html[data-theme="minimal"] .btn {
+  background: #D2CDE7;
+}
 html[data-theme="neon"] .sidebar-footer {
   background: rgba(18,20,28,1); /* Непрозрачный вариант surface-1 для neon */
+}
+html[data-theme="neon"] .btn {
+  background: rgba(18,20,28,1);
 }

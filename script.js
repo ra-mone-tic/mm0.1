@@ -808,18 +808,6 @@ function createSectionHeader(title, isToday = false, isTomorrow = false) {
     border-left: 3px solid var(--brand);
   `;
 
-  if (isToday) {
-    header.style.cssText += `
-      color: var(--brand);
-      background: color-mix(in srgb, var(--brand) 10%, var(--surface-2));
-    `;
-  } else if (isTomorrow) {
-    header.style.cssText += `
-      color: var(--text-1);
-      background: var(--surface-2);
-    `;
-  }
-
   header.textContent = title;
   return header;
 }
@@ -927,7 +915,7 @@ function renderEventList(list) {
       const dayName = getDayOfWeekName(dayOfWeek);
 
       if (dayName !== lastDayName) {
-        listContainer.appendChild(createSectionHeader(dayName, dayOfWeek === todayIndex));
+        listContainer.appendChild(createSectionHeader(dayName));
         lastDayName = dayName;
       }
 
