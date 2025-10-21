@@ -120,7 +120,7 @@ function closeWelcomeModal() {
     welcomeModal.style.display = 'none';
   }, 150);
   welcomeModal.setAttribute('aria-hidden', 'true');
-  sessionStorage.setItem('welcome-shown', 'true');
+  localStorage.setItem('welcome-shown', 'true');
   document.removeEventListener('keydown', welcomeEscapeHandler);
 }
 
@@ -1461,7 +1461,7 @@ loadGeocodeCache()
       }
     }
 
-if (!sessionStorage.getItem('welcome-shown')) {
+if (!localStorage.getItem('welcome-shown')) {
   setTimeout(() => showWelcomeModal(), 500);
 }
   })
