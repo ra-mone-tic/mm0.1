@@ -343,6 +343,14 @@
       #bottomBar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
       .search-field { padding: 8px 12px; }
       #global-search { font-size: 15px; }
+      .welcome-modal__content {
+        top: 12vh;
+        bottom: max(12vh, env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        height: auto;
+        max-height: 76vh;
+      }
     }
 
     /* Планшеты и большие телефоны */
@@ -581,7 +589,13 @@
     @media (max-width: 640px) {
       .welcome-modal__content {
         padding: 20px;
-        height: 350px;
+        height: auto;
+        top: 12vh;
+        bottom: max(12vh, env(safe-area-inset-bottom));
+        left: 5vw;
+        right: 5vw;
+        transform: none;
+        max-height: 76vh;
       }
       .welcome-logo {
         width: 50px;
@@ -599,7 +613,12 @@
     @media (max-width: 480px) {
       .welcome-modal__content {
         padding: 16px;
-        height: 300px;
+        height: auto;
+        top: 12vh;
+        bottom: max(12vh, env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        max-height: 76vh;
       }
       .welcome-logo {
         width: 45px;
@@ -618,7 +637,12 @@
     @media (max-width: 375px) {
       .welcome-modal__content {
         padding: 12px;
-        height: 250px;
+        height: auto;
+        top: 12vh;
+        bottom: max(12vh, env(safe-area-inset-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        max-height: 76vh;
       }
       .welcome-logo {
         width: 40px;
