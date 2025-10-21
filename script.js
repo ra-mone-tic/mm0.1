@@ -94,6 +94,99 @@ const MAP_OPTIONS = {
 
 const DEVICE_TODAY = new Date().toISOString().slice(0, 10);
 
+// ===== Welcome Modal =====
+
+const welcomeModal = document.getElementById('welcome-modal');
+const welcomeContent = document.getElementById('welcome-content');
+const help = document.getElementById('help');
+
+function showWelcomeModal() {
+  welcomeModal.style.display = 'block';
+  setTimeout(() => {
+    welcomeModal.classList.add('show');
+  }, 0);
+  showWelcomePage1();
+  welcomeModal.onclick = (e) => {
+    if (e.target === welcomeModal || e.target.classList.contains('welcome-modal__backdrop')) {
+      closeWelcomeModal();
+    }
+  };
+  document.addEventListener('keydown', welcomeEscapeHandler);
+}
+
+function closeWelcomeModal() {
+  welcomeModal.classList.remove('show');
+  setTimeout(() => {
+    welcomeModal.style.display = 'none';
+  }, 150);
+  welcomeModal.setAttribute('aria-hidden', 'true');
+  sessionStorage.setItem('welcome-shown', 'true');
+  document.removeEventListener('keydown', welcomeEscapeHandler);
+}
+
+function welcomeEscapeHandler(e) {
+  if (e.key === 'Escape') {
+    closeWelcomeModal();
+  }
+}
+
+function showWelcomePage1() {
+  const children = Array.from(welcomeContent.children);
+  children.forEach(el => el.style.opacity = 0);
+
+  setTimeout(() => {
+    const html = `<img src="assets/Group 27.png" style="width:60px; height:60px; margin:0 auto 16px; display:block;" alt="Логотип"/>
+<p>Привет! Это <img src="assets/Vector.png" class="inline-logo" alt="MEOW"/> Афиша, и здесь мы рассказываем о мероприятиях Калининграда - культурных, познавательных, развлекательных и неочень.</p>
+<div class="welcome-buttons">
+<button class="welcome-btn" onclick="showWelcomePage2()">Расскажи подробнее о проекте</button>
+<button class="welcome-btn" onclick="">Как здесь всё устроено?</button>
+<button class="welcome-btn" onclick="closeWelcomeModal()">Давай движа!</button>
+</div>`;
+    welcomeContent.innerHTML = html;
+
+    const newChildren = Array.from(welcomeContent.children);
+    newChildren.forEach(el => el.style.opacity = 0);
+
+    setTimeout(() => {
+      newChildren.forEach(el => el.style.opacity = 1);
+    }, 0);
+  }, 70);
+}
+
+function showWelcomePage2() {
+  const children = Array.from(welcomeContent.children);
+  children.forEach(el => el.style.opacity = 0);
+
+  setTimeout(() => {
+    const html = `<p><img src="assets/Vector.png" class="inline-logo" alt="MEOW"/> Афиша - проект команды MEOW Records. Мы давно работаем с музыкальной сценой Калининграда, организуем мероприятия, оказываем техническую и информационную поддержку, выступаем сами.
+
+Здесь мы собираем события любимого города, рассказываем о них в доступной форме и так, надеемся, развиваем интерес к культуре нашего региона внутри и за его пределами.
+
+Итак, давай, покажу, как здесь всё устроено.</p>
+<div class="welcome-buttons">
+<button class="welcome-btn" onclick="closeWelcomeModal()">Давай</button>
+</div>`;
+    welcomeContent.innerHTML = html;
+
+    const newChildren = Array.from(welcomeContent.children);
+    newChildren.forEach(el => el.style.opacity = 0);
+
+    setTimeout(() => {
+      newChildren.forEach(el => el.style.opacity = 1);
+    }, 0);
+  }, 70);
+}
+
+help.addEventListener('click', () => showWelcomeModal());
+
+bindKeyboardActivation(help, () => showWelcomeModal());
+
+document.addEventListener('pointerdown', event => {
+  if (!welcomeModal.hidden && !welcomeContent.contains(event.target) && event.target !== help) {
+    closeWelcomeModal();
+  }
+});
+
 // Функции транслитерации
 function transliterateToRussian(text) {
   const translitMap = {
@@ -1367,6 +1460,10 @@ loadGeocodeCache()
         focusEventOnMap(target);
       }
     }
+
+if (!sessionStorage.getItem('welcome-shown')) {
+  setTimeout(() => showWelcomeModal(), 500);
+}
   })
   .catch(error => {
     console.error('Ошибка загрузки данных', error);
