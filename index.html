@@ -365,6 +365,13 @@
       .date-input-container label { font-size: 11px; }
       #burger { min-width: 40px; min-height: 40px; padding: 6px; font-size: 20px; }
       #sidebar hr { margin-top: 40px; }
+      .welcome-modal {
+        top: env(safe-area-inset-top);
+        left: env(safe-area-inset-left);
+        width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
+        height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        box-sizing: border-box;
+      }
     }
 
     /* Стандартные мобильные телефоны */
@@ -589,11 +596,11 @@
     @media (max-width: 640px) {
       .welcome-modal__content {
         padding: 20px;
+        left: 10vw;
+        width: 80vw;
         height: auto;
         top: 12vh;
         bottom: max(12vh, env(safe-area-inset-bottom));
-        left: 5vw;
-        right: 5vw;
         transform: none;
         max-height: 76vh;
       }
@@ -614,7 +621,7 @@
       .welcome-modal__content {
         padding: 16px;
         height: auto;
-        top: 12vh;
+        top: calc(12vh + env(safe-area-inset-top));
         bottom: max(12vh, env(safe-area-inset-bottom));
         left: 50%;
         transform: translateX(-50%);
@@ -640,8 +647,9 @@
         height: auto;
         top: 12vh;
         bottom: max(12vh, env(safe-area-inset-bottom));
-        left: 50%;
-        transform: translateX(-50%);
+        left: calc(10vw + env(safe-area-inset-left));
+        right: calc(10vw + env(safe-area-inset-right));
+        transform: none;
         max-height: 76vh;
       }
       .welcome-logo {
