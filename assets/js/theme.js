@@ -6,6 +6,10 @@
   function setTheme(t){
     document.documentElement.setAttribute('data-theme', t);
     try{ localStorage.setItem(KEY, t); }catch(e){ /* ignore */ }
+    const logo = document.getElementById('logo');
+    if(logo){
+      logo.src = t === 'neon' ? 'assets/logo1.png' : 'assets/Vector.png';
+    }
   }
   function getTheme(){
     try{ return localStorage.getItem(KEY) || DEFAULT; }catch(e){ return DEFAULT; }

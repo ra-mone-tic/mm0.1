@@ -471,3 +471,10 @@ html[data-theme="neon"] .sidebar-footer {
 html[data-theme="neon"] .btn {
   background: rgba(18,20,28,1);
 }
+html[data-theme="neon"] .welcome-btn {
+  background: #2B2A29;
+  color: var(--text-0);
+}
+html[data-theme="neon"] .welcome-btn:hover {
+  background: color-mix(in srgb, #2B2A29 85%, #0a0b0f);
+}
