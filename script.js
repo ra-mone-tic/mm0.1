@@ -135,7 +135,7 @@ function showWelcomePage1() {
   children.forEach(el => el.style.opacity = 0);
 
   setTimeout(() => {
-    const html = `<img src="assets/Group 27.png" style="width:60px; height:60px; margin:0 auto 16px; display:block;" alt="Логотип"/>
+    const html = `<img class="welcome-logo" src="assets/Group 27.png" alt="Логотип"/>
 <p>Привет! Это <img src="assets/Vector.png" class="inline-logo" alt="MEOW"/> Афиша, и здесь мы рассказываем о мероприятиях Калининграда - культурных, познавательных, развлекательных и неочень.</p>
 <div class="welcome-buttons">
 <button class="welcome-btn" onclick="showWelcomePage2()">Расскажи подробнее о проекте</button>

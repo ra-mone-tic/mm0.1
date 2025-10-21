@@ -545,10 +545,96 @@
       font-size: 20px;
       text-align: center;
     }
+    .welcome-logo {
+      margin: 0 auto 16px;
+      display: block;
+      width: 60px;
+      height: 60px;
+    }
     .inline-logo {
       height: 2em;
       vertical-align: baseline;
       margin: 0 2px;
+    }
+
+    /* Адаптив для приветственного экрана */
+    @media (max-width: 768px) {
+      .welcome-modal__content {
+        padding: 24px;
+        height: 400px;
+      }
+      .welcome-logo {
+        width: 55px;
+        height: 55px;
+      }
+      .welcome-modal p {
+        font-size: 18px;
+      }
+      .welcome-btn {
+        padding: 10px 14px;
+        font-size: 16px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .welcome-modal__content {
+        padding: 20px;
+        height: 350px;
+      }
+      .welcome-logo {
+        width: 50px;
+        height: 50px;
+      }
+      .welcome-modal p {
+        font-size: 17px;
+      }
+      .welcome-btn {
+        padding: 8px 12px;
+        font-size: 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .welcome-modal__content {
+        padding: 16px;
+        height: 300px;
+      }
+      .welcome-logo {
+        width: 45px;
+        height: 45px;
+        margin-bottom: 12px;
+      }
+      .welcome-modal p {
+        font-size: 16px;
+      }
+      .welcome-btn {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 375px) {
+      .welcome-modal__content {
+        padding: 12px;
+        height: 250px;
+      }
+      .welcome-logo {
+        width: 40px;
+        height: 40px;
+        margin-bottom: 8px;
+      }
+      .welcome-modal p {
+        font-size: 14px;
+        margin: 12px 0;
+      }
+      .welcome-buttons {
+        gap: 4px;
+      }
+      .welcome-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        margin: 2px;
+      }
     }
   </style>
 </head>
