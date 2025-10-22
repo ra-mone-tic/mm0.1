@@ -119,6 +119,7 @@
     #help {
       cursor: pointer;
       font-size: 22px;
+      font-weight: 700;
       color: var(--text-0);
       user-select: none;
       position: relative;
@@ -138,6 +139,7 @@
     #burger {
       cursor: pointer;
       font-size: 22px;
+      font-weight: 700;
       color: var(--text-0);
       user-select: none;
       position: relative;
@@ -700,7 +702,17 @@
     <hr>
     <div id="upcoming"></div>
     <div class="sidebar-footer">
-      <button id="toggleArchive" class="btn" type="button">Архив</button>
+      <button id="toggleArchive" type="button" style="
+        display:inline-flex; align-items:center; gap:.5rem; padding:7px 11px;
+        border:none; border-radius:9999px;
+        background:#d2cde7; color:black;
+        font-size:12px; font-weight:500; font-family: var(--font-ui);
+        cursor:pointer; user-select:none;
+        transition: background var(--fx-fast);
+        box-shadow: var(--shadow-sm);
+        outline: none;
+        -webkit-tap-highlight-color: transparent;
+      " onmouseover="this.style.background='color-mix(in srgb, #d2cde7 90%, black)'" onmouseout="this.style.background='#d2cde7'">Архив</button>
     </div>
   </aside>
 

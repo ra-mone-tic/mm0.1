@@ -647,23 +647,23 @@ function popupTemplate(event) {
       onclick="window.copyShareLink('${event.id}')"
       style="
         position: absolute;
-        right: 22px;
-        bottom: 1px;
-      padding: 4px 10px;
+        right: 8px;
+        bottom: 8px;
+      padding: 7px 11px;
       background: #d2cde7;
       color: black;
       border: none;
-      border-radius: 20px;
-      font-size: 11px;
+      border-radius: 9999px;
+      font-size: 12px;
       font-weight: 500;
       font-family: var(--font-ui);
       cursor: pointer;
-      z-index: 10;
+      z-index: 11;
       transition: background var(--fx-fast);
       box-shadow: var(--shadow-sm);
       outline: none;
       "
-      onmouseover="this.style.background='color-mix(in srgb, #d2cde7 85%, black)'"
+      onmouseover="this.style.background='color-mix(in srgb, #d2cde7 90%, black)'"
       onmouseout="this.style.background='#d2cde7'"
     >Поделиться</button>`;
 
@@ -677,41 +677,44 @@ function popupTemplate(event) {
   const isLong = postText.length > COLLAPSED_LIMIT;
 
   // Овальная кнопка "Узнать больше" в левом нижнем углу
+
   const expandButton = isLong ? `<button class="expand-btn"
     type="button"
     style="
       position: absolute;
-      bottom: 1px;
+      bottom: 8px;
       left: 8px;
-      padding: 4px 10px;
+      padding: 7px 11px;
       background: #d2cde7;
       color: black;
       border: none;
-      border-radius: 20px;
-      font-size: 11px;
+      border-radius: 9999px;
+      font-size: 12px;
       font-weight: 500;
       font-family: var(--font-ui);
       cursor: pointer;
-      z-index: 10;
+      z-index: 11;
       transition: background var(--fx-fast);
       box-shadow: var(--shadow-sm);
       outline: none;
     "
-    onmouseover="this.style.background='color-mix(in srgb, #d2cde7 85%, black)'"
+    onmouseover="this.style.background='color-mix(in srgb, #d2cde7 90%, black)'"
     onmouseout="this.style.background='#d2cde7'"
   >Узнать больше</button>` : '';
 
   return `
-    <div style="position:relative;padding:8px 8px 28px 8px;min-width:220px;max-width:320px;font-family:var(--font-ui);">
+    <div style="font-family:var(--font-ui);padding-bottom:60px;">
       <div><strong>${event.title}</strong></div>
       <div style="color:var(--text-1);">${formatLocation(event.location)}</div>
-      <div style="color:var(--text-1);">${getEventDateLabel(event.date, event.text)}</div>
-      <div class="popup-text" style="margin:8px 0 0 0;max-height:72px;overflow-y:scroll;position:relative;">
+      <div style="color:var(--text-1);">${getEventDateLabel(event.date, event.text).replace(/font-style: italic;/g, '')}</div>
+      <div class="popup-text" style="margin:8px 0 -29px 0;max-height:72px;overflow-y:scroll;position:relative;">
         ${postText.replace(/\n/g, '<br>')}
       </div>
-      <div class="popup-text-full" style="display:none;max-height:160px;overflow:auto;margin:8px 0 0 0;">${postText.replace(/\n/g, '<br>')}</div>
-      ${expandButton}
-      ${shareButton}
+      <div class="popup-text-full" style="display:none;max-height:200px;overflow:auto;margin:8px 0 -29px 0;">${postText.replace(/\n/g, '<br>')}</div>
+      <div style="position:absolute;bottom:6px;left:6px;right:6px;display:flex;justify-content:space-between;gap:6px;">
+        ${expandButton.replace('position: absolute; bottom: 8px; left: 8px;', 'position: relative;')}
+        ${shareButton.replace('position: absolute; right: 8px; bottom: 8px;', 'position: relative;')}
+      </div>
     </div>
   `;
 }
@@ -732,11 +735,14 @@ function addMarker(event) {
 
     if (!mainText || !fullText) return;
 
+    const buttonContainer = popupEl.querySelector('div:nth-child(4)');  // контейнер кнопок
+
     if (popupState.expanded) {
       // Свернуть
       mainText.style.display = 'block';
       fullText.style.display = 'none';
       popupState.expanded = false;
+      if (buttonContainer) buttonContainer.style.bottom = '6px';
     } else {
       // Развернуть
       mainText.style.display = 'none';
