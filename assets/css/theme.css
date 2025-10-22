@@ -460,6 +460,12 @@ html[data-theme="test2"] .welcome-btn:hover {
   border: 2px solid #2B2A29 !important;
 }
 
+/* Выделение выбранной даты в календаре для тем neon и test2 */
+html[data-theme="neon"] .calendar__day--selected,
+html[data-theme="test2"] .calendar__day--selected {
+  border: 2px solid #22d3ee !important;
+}
+
 .calendar__day--today {
   position: relative;
   background: var(--surface-2);
