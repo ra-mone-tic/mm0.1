@@ -718,7 +718,7 @@ function popupTemplate(event) {
 
 function addMarker(event) {
   const popup = new maplibregl.Popup({ offset: 24, closeButton: false }).setHTML(popupTemplate(event));
-  const marker = new maplibregl.Marker().setLngLat([event.lon, event.lat]).setPopup(popup).addTo(map);
+  const marker = new maplibregl.Marker({color: '#22d3ee'}).setLngLat([event.lon, event.lat]).setPopup(popup).addTo(map);
   markers.push(marker);
   markerById.set(event.id, marker);
 

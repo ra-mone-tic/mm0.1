@@ -1,7 +1,7 @@
 ﻿;(function(){
   const KEY = 'meowmap-theme';
   const DEFAULT = 'minimal';
-  const THEMES = ['minimal','neon'];
+  const THEMES = ['minimal','neon','test'];
 
   function setTheme(t){
     document.documentElement.setAttribute('data-theme', t);

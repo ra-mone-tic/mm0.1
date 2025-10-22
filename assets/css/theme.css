@@ -259,6 +259,26 @@ html[data-theme="neon"] .sidebar-footer {
   background: rgba(18,20,28,1); /* Непрозрачный вариант surface-1 для neon */
 }
 
+/* Test theme */
+html[data-theme="test"]{
+  --surface-0:#ffffff; --surface-1:#d2cde77e; --surface-2:#eef1f5;
+  --text-0:#2B2A29; --text-1:#6B7280; --text-2:#D1D5DB;
+  --brand:#2f7ef7; --accent:#22b07d;
+  --radius-sm:8px; --radius-md:12px;
+  --shadow-md: 0 0 16px rgba(0,0,0,0.1), 0 0 32px #22d3ee;
+}
+html[data-theme="test"] .sidebar-footer {
+  background: #f9c5ff; /* Непрозрачный вариант surface-1 для test */
+}
+html[data-theme="test"] button.expand-btn,
+html[data-theme="test"] button.share-btn {
+  color: var(--text-0) !important;
+}
+html[data-theme="test"] button.expand-btn:hover,
+html[data-theme="test"] button.share-btn:hover {
+  background: color-mix(in srgb, #d2cde7 85%, white) !important;
+}
+
 /* 6) Calendar Dropdown */
 .calendar-modal {
   position: absolute;
