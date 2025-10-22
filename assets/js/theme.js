@@ -1,14 +1,14 @@
 ﻿;(function(){
   const KEY = 'meowmap-theme';
   const DEFAULT = 'minimal';
-  const THEMES = ['minimal','neon','test'];
+  const THEMES = ['minimal','neon','test','test2'];
 
   function setTheme(t){
     document.documentElement.setAttribute('data-theme', t);
     try{ localStorage.setItem(KEY, t); }catch(e){ /* ignore */ }
     const logo = document.getElementById('logo');
     if(logo){
-      logo.src = t === 'neon' ? 'assets/logo1.png' : 'assets/Vector.png';
+      logo.src = (t === 'neon' || t === 'test2') ? 'assets/logo1.png' : 'assets/Vector.png';
     }
   }
   function getTheme(){

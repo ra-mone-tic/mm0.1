@@ -137,7 +137,7 @@ function showWelcomePage1() {
   setTimeout(() => {
     const theme = document.documentElement.getAttribute('data-theme');
     const html = `<img class="welcome-logo" src="assets/Group 27.png" alt="Логотип"/>
-<p>Привет! Это <img src="${theme === 'neon' ? 'assets/logo1.png' : 'assets/Vector.png'}" class="inline-logo" alt="MEOW"/> Афиша, и здесь мы рассказываем о мероприятиях Калининграда - культурных, познавательных, развлекательных и неочень.</p>
+<p>Привет! Это <img src="${theme === 'neon' || theme === 'test2' ? 'assets/logo1.png' : 'assets/Vector.png'}" class="inline-logo" alt="MEOW"/> Афиша, и здесь мы рассказываем о мероприятиях Калининграда - культурных, познавательных, развлекательных и неочень.</p>
 <div class="welcome-buttons">
 <button class="welcome-btn" onclick="showWelcomePage2()">Расскажи подробнее о проекте</button>
 <button class="welcome-btn" onclick="">Как здесь всё устроено?</button>
@@ -160,7 +160,7 @@ function showWelcomePage2() {
 
   setTimeout(() => {
     const theme = document.documentElement.getAttribute('data-theme');
-    const html = `<p><img src="${theme === 'neon' ? 'assets/logo1.png' : 'assets/Vector.png'}" class="inline-logo" alt="MEOW"/> Афиша - проект команды MEOW Records. Мы давно работаем с музыкальной сценой Калининграда, организуем мероприятия, оказываем техническую и информационную поддержку, выступаем сами.
+    const html = `<p><img src="${theme === 'neon' || theme === 'test2' ? 'assets/logo1.png' : 'assets/Vector.png'}" class="inline-logo" alt="MEOW"/> Афиша - проект команды MEOW Records. Мы давно работаем с музыкальной сценой Калининграда, организуем мероприятия, оказываем техническую и информационную поддержку, выступаем сами.
 
 Здесь мы собираем события любимого города, рассказываем о них в доступной форме и так, надеемся, развиваем интерес к культуре нашего региона внутри и за его пределами.
 
