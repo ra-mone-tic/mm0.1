@@ -474,6 +474,12 @@ html[data-theme="test2"] .calendar__day--selected {
   border: 2px solid #22d3ee !important;
 }
 
+html[data-theme="neon"] .calendar__day--today,
+html[data-theme="test2"] .calendar__day--today {
+  background: #898989 !important;
+  border: none;
+}
+
 .calendar__day--today {
   position: relative;
   background: var(--surface-2);
