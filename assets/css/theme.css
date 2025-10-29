@@ -259,6 +259,28 @@ html[data-theme="neon"] .calendar__day--other-month {
 
 /* Стилей для неактуальных тем не осталось */
 
+/* Непрозрачный шапка сайдбара для тем minimal и neon */
+.sidebar-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface-1);
+  height: 89px;
+  z-index: 1100;
+}
+.sidebar-header h3 {
+  position: absolute;
+  left: 20px;
+  top: 31px;
+  margin: 0;
+}
+html[data-theme="minimal"] .sidebar-header { background: #d2cde7; }
+html[data-theme="neon"] .sidebar-header { background: rgba(18,20,28,1); }
+html[data-theme="test"] .sidebar-header { background: #d2cde7; }
+html[data-theme="test2"] .sidebar-header { background: rgba(18,20,28,1); }
+
+
 /* Непрозрачный футер сайдбара для тем minimal и neon */
 html[data-theme="minimal"] .sidebar-footer {
   background: #f9c5ff; /* Непрозрачный вариант surface-1 для minimal */

@@ -161,7 +161,7 @@
     #sidebar {
       position: fixed;
       right: 0;
-      top: 1px;
+      top: 0;
       bottom: 90px;
       width: 320px;
       background: var(--surface-1);
@@ -171,7 +171,9 @@
       border-top-left-radius: var(--radius-md);
       border-bottom-left-radius: var(--radius-md);
       box-shadow: var(--shadow-sm);
-      padding: 12px;
+      padding-top: 24px;
+      padding-left: 12px;
+      padding-right: 12px;
       padding-bottom: 0;
       font-size: var(--font-size-base);
       overflow-y: auto;
@@ -444,20 +446,25 @@
     }
     /* Переопределение фона футера сайдбара для всех тем */
     .sidebar-footer {
-      position: sticky;
+      position: absolute;
       bottom: 0;
+      right: 0;
       background: transparent !important;
-      padding: 8px;
+      padding: 12px;
       text-align: right;
+      z-index: 1300;
     }
     #toggleArchive {
+      display:inline-flex; align-items:center; gap:.5rem; padding:7px 11px;
+      border:none; border-radius:9999px;
       background: var(--surface-1);
       color: var(--text-0);
-      border: none;
-      padding: 8px 12px;
-      cursor: pointer;
-      border-radius: var(--radius-xs);
+      font-size:12px; font-weight:500; font-family: var(--font-ui);
+      cursor:pointer; user-select:none;
       transition: background var(--fx-fast);
+      box-shadow: var(--shadow-sm);
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
     }
     #toggleArchive:hover { background: var(--surface-2); }
     #copy-toast {
@@ -696,23 +703,13 @@
   </div>
 
   <aside id="sidebar" aria-label="Список событий">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div class="sidebar-header" style="display:flex;justify-content:space-between;align-items:center;">
       <h3 style="margin:0;">События</h3>
     </div>
     <hr>
     <div id="upcoming"></div>
     <div class="sidebar-footer">
-      <button id="toggleArchive" type="button" style="
-        display:inline-flex; align-items:center; gap:.5rem; padding:7px 11px;
-        border:none; border-radius:9999px;
-        background:#d2cde7; color:black;
-        font-size:12px; font-weight:500; font-family: var(--font-ui);
-        cursor:pointer; user-select:none;
-        transition: background var(--fx-fast);
-        box-shadow: var(--shadow-sm);
-        outline: none;
-        -webkit-tap-highlight-color: transparent;
-      " onmouseover="this.style.background='color-mix(in srgb, #d2cde7 90%, black)'" onmouseout="this.style.background='#d2cde7'">Архив</button>
+      <button id="toggleArchive" type="button">Архив</button>
     </div>
   </aside>
 
