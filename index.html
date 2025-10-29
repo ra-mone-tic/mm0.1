@@ -258,6 +258,14 @@
       outline: none;
     }
     #global-search::placeholder { color: var(--text-1); }
+    /* Отключаем браузерные украшения для поля поиска */
+    #global-search::-webkit-search-decoration,
+    #global-search::-webkit-search-cancel-button,
+    #global-search::-webkit-search-results-button,
+    #global-search::-webkit-search-results-decoration {
+      -webkit-appearance: none;
+      appearance: none;
+    }
     #search-clear {
       border: none;
       background: transparent;
@@ -269,6 +277,8 @@
       line-height: 1;
     }
     #search-clear.is-visible { display: inline-flex; }
+    /* Скрываем пользовательский крестик */
+    #search-clear { display: none !important; }
 
     #search-panel {
       position: fixed;
