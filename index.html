@@ -178,7 +178,9 @@
       z-index: 1200;
     }
     .sidebar-content {
-      height: 100%;
+      position: relative;
+      top: 89px;
+      height: calc(100% - 89px);
       overflow-y: auto;
       padding-top: 24px;
       padding-left: 12px;
@@ -451,11 +453,9 @@
     /* Переопределение фона футера сайдбара для всех тем */
     .sidebar-footer {
       position: absolute;
-      bottom: 0;
-      right: 0;
+      bottom: 15px;
+      right: 15px;
       background: transparent !important;
-      padding: 12px;
-      text-align: right;
       z-index: 1300;
     }
     #toggleArchive {
@@ -707,14 +707,14 @@
   </div>
 
   <aside id="sidebar" aria-label="Список событий">
+    <div class="sidebar-footer">
+      <button id="toggleArchive" type="button">Архив</button>
+    </div>
     <div class="sidebar-content">
       <div class="sidebar-header" style="display:flex;justify-content:space-between;align-items:center;">
         <h3 style="margin:0;">События</h3>
       </div>
       <div id="upcoming"></div>
-      <div class="sidebar-footer">
-        <button id="toggleArchive" type="button">Архив</button>
-      </div>
     </div>
   </aside>
 
