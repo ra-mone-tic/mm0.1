@@ -276,6 +276,7 @@ html[data-theme="neon"] .calendar__day--other-month {
   top: 31px;
   margin: 0;
 }
+#sidebar #upcoming { margin-top: 89px; }
 html[data-theme="minimal"] .sidebar-header { background: #d2cde7; }
 html[data-theme="neon"] .sidebar-header { background: rgba(18,20,28,1); }
 html[data-theme="test"] .sidebar-header { background: #d2cde7; }
