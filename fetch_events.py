@@ -1,65 +1,74 @@
-# Python 3.10+
+#!/usr/bin/env python3
 """
 MeowAfisha · fetch_events.py
-Каскадный геокодинг: ArcGIS → Yandex → Nominatim
-- Кэш: geocode_cache.json (коммитим — экономит лимиты)
-- Логи: печать в stdout + (опционально) geocode_log.json при GEOCODE_SAVE_LOG=1
-- Рейт-лимиты: min_delay_seconds для каждого провайдера (env)
+Улучшено с обработкой ошибок и логированием
+- Каскадный геокодинг: ArcGIS → Yandex → Nominatim
+- Кэш: geocode_cache.json (коммитим для экономии квот API)
+- Логирование: stdout + опционально geocode_log.json с GEOCODE_SAVE_LOG=1
+- Ограничения скорости: min_delay_seconds на провайдера (env)
 """
 
-import os, re, time, json, sys
+import os
+import re
+import time
+import json
+import sys
+import logging
 from pathlib import Path
 
-# ── опциональная загрузка .env при локальном запуске
+# Опциональная загрузка .env для локальной разработки
 try:
-    from dotenv import load_dotenv  # pip install python-dotenv
+    from dotenv import load_dotenv
     load_dotenv()
-except Exception:
+except ImportError:
     pass
 
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 import pandas as pd
 from geopy.geocoders import ArcGIS, Yandex, Nominatim
 from geopy.extra.rate_limiter import RateLimiter
+import geopy.exc
 
-# ─────────── НАСТРОЙКИ ───────────
-TOKEN        = os.getenv("VK_TOKEN")                       # ⬅️ секрет VK (обязателен)
-DOMAIN       = os.getenv("VK_DOMAIN", "meowafisha")        # паблик ВК
-MAX_POSTS    = int(os.getenv("VK_MAX_POSTS", "2000"))
-BATCH        = 100
-WAIT_REQ     = float(os.getenv("VK_WAIT_REQ", "1.1"))      # пауза между wall.get (~1 rps)
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+if not logger.handlers:
+    logger.addHandler(handler)
+
+# ─────────── НАСТРОЙКА ───────────
+TOKEN = os.getenv("VK_TOKEN")  # Обязательный секрет VK
+DOMAIN = os.getenv("VK_DOMAIN", "meowafisha")
+MAX_POSTS = int(os.getenv("VK_MAX_POSTS", "2000"))
+BATCH = 100
+WAIT_REQ = float(os.getenv("VK_WAIT_REQ", "1.1"))  # пауза между wall.get (~1 rps)
 YEAR_DEFAULT = os.getenv("YEAR_DEFAULT", "2025")
 
-# Геокодеры: задержки (сек) между запросами
-ARCGIS_MIN_DELAY    = float(os.getenv("ARCGIS_MIN_DELAY", "1.0"))
-YANDEX_MIN_DELAY    = float(os.getenv("YANDEX_MIN_DELAY", "1.0"))
-NOMINATIM_MIN_DELAY = float(os.getenv("NOMINATIM_MIN_DELAY", "1.0"))
+# Задержки между запросами геокодинга (секунды)
+DEFAULT_DELAYS = {
+    'ARCGIS': float(os.getenv("ARCGIS_MIN_DELAY", "1.0")),
+    'YANDEX': float(os.getenv("YANDEX_MIN_DELAY", "1.0")),
+    'NOMINATIM': float(os.getenv("NOMINATIM_MIN_DELAY", "1.0"))
+}
 
-# Yandex / Nominatim ключи/параметры
-YANDEX_KEY = os.getenv("YANDEX_KEY")  # ⬅️ обязательный для Яндекса
-NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "meowafisha-bot")
-# если в перспективе будет свой Nominatim: NOMINATIM_URL="nominatim.example.com"
-NOMINATIM_URL = os.getenv("NOMINATIM_URL", "").strip()
-
-# Логирование в файл (кроме stdout)
+# Опциональный вывод лога в файл
 GEOCODE_SAVE_LOG = os.getenv("GEOCODE_SAVE_LOG", "1") == "1"
 
-OUTPUT_JSON  = Path("events.json")           # отсюда читает фронт
-CACHE_FILE   = Path("geocode_cache.json")    # коммитим — экономит лимиты
-LOG_FILE     = Path("geocode_log.json")      # в .gitignore
+OUTPUT_JSON = Path("events.json")
+CACHE_FILE = Path("geocode_cache.json")
+LOG_FILE = Path("geocode_log.json")
 
-assert TOKEN, "VK_TOKEN не задан (секрет репозитория или .env)"
+assert TOKEN, "VK_TOKEN не задан (секрет репозитория или .env требуется)"
 
-# ─────────── ИНИЦИАЛИЗАЦИЯ ───────────
-vk_url = "https://api.vk.ru/method/wall.get"
-
+# ─────────── УТИЛИТЫ ───────────
 def init_session() -> requests.Session:
-    """Create a requests session with retry logic."""
-    sess = requests.Session()
+    """Создать сессию requests с логикой повтора."""
+    session = requests.Session()
     retry = Retry(
         total=3,
         backoff_factor=0.5,
@@ -67,213 +76,296 @@ def init_session() -> requests.Session:
         allowed_methods=["GET"],
     )
     adapter = HTTPAdapter(max_retries=retry)
-    sess.mount("https://", adapter)
-    sess.mount("http://", adapter)
-    return sess
-
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+    return session
 
 session = init_session()
 
-
-# Геокодеры
-arcgis = ArcGIS(timeout=10)  # публичный ArcGIS, без ключа
-# Яндекс может быть отключён, если нет ключа
-yandex = Yandex(api_key=YANDEX_KEY, timeout=10, user_agent="meowafisha-script") if YANDEX_KEY else None
-
-# Nominatim: по умолчанию публичный; если есть свой — передаём domain
-if NOMINATIM_URL:
-    nominatim = Nominatim(user_agent=NOMINATIM_USER_AGENT, timeout=10, domain=NOMINATIM_URL)
+# Инициализация геокодеров
+arcgis = ArcGIS(timeout=10)
+yandex = Yandex(api_key=os.getenv("YANDEX_KEY"), timeout=10, user_agent="meowafisha-script") if os.getenv("YANDEX_KEY") else None
+nominatim_url = os.getenv("NOMINATIM_URL", "").strip()
+if nominatim_url:
+    nominatim = Nominatim(user_agent=os.getenv("NOMINATIM_USER_AGENT", "meowafisha-bot"), timeout=10, domain=nominatim_url)
 else:
-    nominatim = Nominatim(user_agent=NOMINATIM_USER_AGENT, timeout=10)
+    nominatim = Nominatim(user_agent=os.getenv("NOMINATIM_USER_AGENT", "meowafisha-bot"), timeout=10)
 
-# Рейт-лимитеры (бережно по 1 req/s на сервис)
-arcgis_geocode    = RateLimiter(arcgis.geocode, min_delay_seconds=ARCGIS_MIN_DELAY)
-yandex_geocode    = RateLimiter(yandex.geocode, min_delay_seconds=YANDEX_MIN_DELAY) if yandex else None
-nominatim_geocode = RateLimiter(nominatim.geocode, min_delay_seconds=NOMINATIM_MIN_DELAY)
+# Ограничители скорости (осторожные 1 запрос/с на сервис)
+arcgis_geocode = RateLimiter(arcgis.geocode, min_delay_seconds=DEFAULT_DELAYS['ARCGIS']) if arcgis else None
+yandex_geocode = RateLimiter(yandex.geocode, min_delay_seconds=DEFAULT_DELAYS['YANDEX']) if yandex else None
+nominatim_geocode = RateLimiter(nominatim.geocode, min_delay_seconds=DEFAULT_DELAYS['NOMINATIM']) if nominatim else None
 
-# список провайдеров с их функциями геокодирования (в порядке приоритетов)
 GEOCODERS = [
     {"name": "ArcGIS", "func": arcgis_geocode},
     {"name": "Yandex", "func": yandex_geocode},
     {"name": "Nominatim", "func": nominatim_geocode},
 ]
 
-# ─────────── КЭШ ───────────
+# Временный лог геокодинга (адрес → {'arcgis':..., 'yandex':..., 'nominatim':...})
+geolog = {}
+geocache = {}
+original_cache = {}
+
+def log_geocoding(addr: str, provider: str, success: bool, detail: str = ""):
+    """Расширенное логирование со структурными уровнями."""
+    msg = f"[{provider:9}] {'OK ' if success else 'N/A'} | {addr}"
+    if detail:
+        msg += f" → {detail}"
+
+    level = logging.INFO if success else logging.WARNING
+    logger.log(level, msg)
+
+    # Сохранить в geolog для JSON экспорта
+    if addr not in geolog:
+        geolog[addr] = {}
+    geolog[addr][provider] = {"success": success, "detail": detail}
+
 def load_cache() -> dict:
-    """Загрузить кэш геокодинга из файла.
+    """Загрузить кэш геокодинга из файла с обработкой ошибок."""
+    if not CACHE_FILE.exists():
+        logger.info("Файл кэша не найден, начинаем с чистого")
+        return {}
 
-    Если файл повреждён или отсутствует — вернуть пустой словарь,
-    чтобы запросы к API выполнялись только при необходимости.
-    """
-    if CACHE_FILE.exists():
+    try:
+        with open(CACHE_FILE, 'r', encoding='utf-8') as f:
+            cache = json.load(f)
+        logger.info(f"Кэш загружен: {len(cache)} адресов")
+        return cache
+    except (json.JSONDecodeError, IOError) as e:
+        logger.warning(f"Не удалось загрузить кэш: {e}, начинаем с чистого")
+        return {}
+
+def save_cache(cache: dict, force: bool = False) -> None:
+    """Сохранить кэш геокодинга на диск."""
+    if cache == original_cache and not force:
+        logger.info("Кэш не изменился, пропускаем сохранение")
+        return
+
+    try:
+        with open(CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, ensure_ascii=False, indent=2)
+        logger.info(f"Кэш сохранен: {len(cache)} адресов")
+    except IOError as e:
+        logger.error(f"Не удалось сохранить кэш: {e}")
+
+def geocode_addr(addr: str) -> tuple:
+    """Каскадный геокодинг с обработкой ошибок."""
+    if not addr or not addr.strip():
+        logger.warning("Предоставлен пустой адрес")
+        return (None, None)
+
+    addr = addr.strip()
+
+    # Сначала проверить кэш
+    if addr in geocache:
+        cached_coords = geocache[addr]
+        if cached_coords != [None, None]:
+            logger.info(f"[CACHE    ] HIT | {addr} → {cached_coords[0]:.6f},{cached_coords[1]:.6f}")
+            return tuple(cached_coords)
+        else:
+            logger.info(f"[CACHE    ] HIT | {addr} → координаты не найдены")
+
+    # Попытаться использовать сервисы геокодинга
+    for provider in GEOCODERS:
+        name, func = provider["name"], provider["func"]
+        if not func:
+            log_geocoding(addr, name, False, "key not configured")
+            continue
+
         try:
-            return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            return {}
-    return {}
+            loc = func(addr)
+            if loc:
+                coords = [loc.latitude, loc.longitude]
+                geocache[addr] = coords
+                log_geocoding(addr, name, True, f"{coords[0]:.6f},{coords[1]:.6f}")
+                return tuple(coords)
+            else:
+                log_geocoding(addr, name, False, "no result")
+        except requests.exceptions.RequestException as e:
+            log_geocoding(addr, name, False, f"HTTP error: {e}")
+        except geopy.exc.GeopyError as e:
+            log_geocoding(addr, name, False, f"Geocoding error: {e}")
+        except Exception as e:
+            log_geocoding(addr, name, False, f"Unexpected error: {e}")
 
-
-def save_cache(cache: dict) -> None:
-    """Сохранить текущий кэш геокодинга на диск."""
-    CACHE_FILE.write_text(
-        json.dumps(cache, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-
-
-def save_cache_if_changed(cache: dict, original_cache: dict) -> None:
-    """Сохранить кэш только если он изменился."""
-    if cache != original_cache:
-        CACHE_FILE.write_text(
-            json.dumps(cache, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
-        print(f"💾 Кэш обновлён ({len(cache)} записей)")
-    else:
-        print("💾 Кэш не изменился, сохранение пропущено")
-
-
-# Кэш адрес→[lat, lon]
-geocache = load_cache()
-original_cache = geocache.copy()  # Сохраняем оригинал для сравнения
-
-geolog = {}  # адрес → {'arcgis':..., 'yandex':..., 'nominatim':...}
+    # Все геокодеры не удались
+    geocache[addr] = [None, None]
+    logger.warning(f"Все геокодеры не удались для: {addr}")
+    return (None, None)
 
 def vk_wall(offset: int, attempts: int = 3):
-    params = dict(domain=DOMAIN, offset=offset, count=BATCH,
-                  access_token=TOKEN, v="5.199")
+    """Получить посты стены VK с обработкой ошибок и повторами."""
+    params = {
+        'domain': DOMAIN,
+        'offset': offset,
+        'count': BATCH,
+        'access_token': TOKEN,
+        'v': '5.199'
+    }
+
     for attempt in range(1, attempts + 1):
         try:
-            r = session.get(vk_url, params=params, timeout=20)
+            r = session.get("https://api.vk.ru/method/wall.get", params=params, timeout=20)
             r.raise_for_status()
+
             data = r.json()
-            if "error" in data:
+            if 'error' in data:
                 raise RuntimeError(f"VK API error: {data['error']}")
-            return data["response"]["items"]
-        except Exception as e:
-            if attempt == attempts:
-                raise
-            time.sleep(WAIT_REQ)
+
+            return data['response']['items']
+
+        except requests.exceptions.Timeout:
+            logger.warning(f"VK request timeout (attempt {attempt}/{attempts})")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"VK request failed (attempt {attempt}/{attempts}): {e}")
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON from VK (attempt {attempt}/{attempts}): {e}")
+        except KeyError as e:
+            logger.error(f"Unexpected VK response format (attempt {attempt}/{attempts}): {e}")
+
+        if attempt < attempts:
+            sleep_time = WAIT_REQ * attempt  # progressive backoff
+            logger.info(f"Retrying in {sleep_time:.1f}s...")
+            time.sleep(sleep_time)
+
+    raise RuntimeError(f"Failed to fetch VK data after {attempts} attempts")
 
 CITY_WORDS = r"(калининград|гурьевск|светлогорск|янтарный|зеленоградск|пионерский|балтийск|поселок|пос\.|г\.)"
 
 def extract(text: str):
-    # дата ДД.ММ
-    m_date = re.search(r"\b(\d{2})\.(\d{2})\b", text)
-    # локация после 📍
-    m_loc  = re.search(r"📍\s*(.+)", text)
-    if not (m_date and m_loc):
+    """Извлечь данные события из текста поста VK."""
+    if not text:
         return None
 
-    date  = f"{YEAR_DEFAULT}-{m_date.group(2)}-{m_date.group(1)}"
-    loc   = m_loc.group(1).split('➡️')[0].strip()
+    # Паттерн даты ДД.ММ
+    date_match = re.search(r"\b(\d{2})\.(\d{2})\b", text)
+    # Местоположение после 📍
+    loc_match = re.search(r"📍\s*(.+)", text)
+
+    if not (date_match and loc_match):
+        return None
+
+    date = f"{YEAR_DEFAULT}-{date_match.group(2)}-{date_match.group(1)}"
+    loc = loc_match.group(1).split('➡️')[0].strip()
+
+
+    # Добавить город если отсутствует
     if not re.search(CITY_WORDS, loc, re.I):
         loc += ", Калининград"
 
-    # заголовок = первая строка без "ДД.ММ |"
+    # Заголовок: первая строка без "DD.MM |"
     first_line = text.split('\n', 1)[0]
     title = re.sub(r"^\s*\d{2}\.\d{2}\s*\|\s*", "", first_line).strip()
 
-    return dict(title=title, date=date, location=loc, text=text)
-
-def _log(addr: str, provider: str, ok: bool, detail: str = ""):
-    print(f"[{provider:9}] {'OK ' if ok else 'N/A'} | {addr} {('→ ' + detail) if detail else ''}")
-    if addr not in geolog:
-        geolog[addr] = {}
-    geolog[addr][provider] = {"ok": ok, "detail": detail}
-
-def geocode_addr(addr: str):
-    """Каскадное геокодирование: ArcGIS → Yandex → Nominatim.
-       Возвращает [lat, lon] или [None, None]. Все результаты пишем в кэш.
-    """
-    # Проверяем кэш в начале
-    if addr in geocache:
-        cached_coords = geocache[addr]
-        if cached_coords != [None, None]:  # Если координаты найдены ранее
-            print(f"[CACHE    ] HIT | {addr} → {cached_coords[0]:.6f},{cached_coords[1]:.6f}")
-            return cached_coords
-
-    # Если в кэше нет или координаты None - делаем геокодинг
-    for provider in GEOCODERS:
-        name, func = provider["name"], provider["func"]
-        if not func:
-            detail = "нет ключа" if name == "Yandex" else ""
-            _log(addr, name, False, detail)
-            continue
-        try:
-            loc = func(addr)
-            if loc:
-                res = [loc.latitude, loc.longitude]
-                geocache[addr] = res
-                _log(addr, name, True, f"{res[0]:.6f},{res[1]:.6f}")
-                return res
-            _log(addr, name, False)
-        except Exception as e:
-            _log(addr, name, False, f"err: {e}")
-
-    geocache[addr] = [None, None]
-    return geocache[addr]
+    return {
+        'title': title,
+        'date': date,
+        'location': loc,
+        'text': text
+    }
 
 def main():
-    # ─────────── СБОР ПОСТОВ ───────────
-    records, off = [], 0
-    while off < MAX_POSTS:
-        items = vk_wall(off)
-        if not items:
-            break
-        for it in items:
-            text = it.get("text") or ""
-            evt = extract(text)
-            if evt:
-                records.append(evt)
-        off += BATCH
-        time.sleep(WAIT_REQ)
+    """Основной обработчик с полной обработкой ошибок."""
+    try:
+        logger.info("Запуск обработки событий...")
 
-    print("Анонсов найдено:", len(records))
-    if not records:
-        OUTPUT_JSON.write_text("[]", encoding="utf-8")
-        sys.exit(0)
+        # Загрузить кэш
+        global geocache, original_cache, geolog
+        geocache = load_cache()
+        original_cache = geocache.copy()
+        geolog = {}
 
-    df = pd.DataFrame(records).drop_duplicates()
+        # Собрать посты
+        records, offset = [], 0
+        logger.info(f"Загружаем до {MAX_POSTS} постов из группы VK '{DOMAIN}'")
 
-    # ─────────── ГЕОКОДИНГ ───────────
-    lats, lons = [], []
-    for addr in df["location"]:
-        lat, lon = geocode_addr(addr)
-        lats.append(lat); lons.append(lon)
+        while offset < MAX_POSTS:
+            try:
+                items = vk_wall(offset)
+                if not items:
+                    logger.info("Больше постов не найдено")
+                    break
 
-    df["lat"] = lats; df["lon"] = lons
+                for item in items:
+                    text = item.get("text") or ""
+                    event = extract(text)
+                    if event:
+                        records.append(event)
 
-    bad = df[df["lat"].isna()]
-    bad_cnt = int(bad.shape[0])
-    if bad_cnt:
-        missed = ", ".join(sorted(set(map(str, bad["location"].tolist()))))
-        print(f"⚠️  Не найдены координаты для {bad_cnt} адрес(ов): {missed[:800]}{' …' if len(missed)>800 else ''}")
+                offset += BATCH
 
-    # фильтруем точки без координат из отдачи на фронт
-    df = df.dropna(subset=["lat", "lon"])
+                if offset < MAX_POSTS:
+                    time.sleep(WAIT_REQ)
 
-    print(f"С координатами: {len(df)} | без координат: {bad_cnt}")
+            except Exception as e:
+                logger.error(f"Не удалось обработать батч с смещением {offset}: {e}")
+                break
 
-    # ─────────── СОХРАНЕНИЕ ───────────
-    df = df[["title","date","location","lat","lon","text"]].sort_values("date")
-    OUTPUT_JSON.write_text(
-        df.to_json(orient="records", force_ascii=False, indent=2),
-        encoding="utf-8"
-    )
+        logger.info(f"Извлечено {len(records)} событий")
 
-    # кэш сохраняем только если изменился — экономит I/O
-    save_cache_if_changed(geocache, original_cache)
+        if not records:
+            logger.warning("События не найдены")
+            OUTPUT_JSON.write_text("[]", encoding="utf-8")
+            return
 
-    if GEOCODE_SAVE_LOG:
-        try:
-            LOG_FILE.write_text(json.dumps(geolog, ensure_ascii=False, indent=2), encoding="utf-8")
-        except Exception as e:
-            print(f"Не удалось сохранить {LOG_FILE}: {e}")
+        # Дедупликация и сортировка
+        df = pd.DataFrame(records).drop_duplicates()
+        logger.info(f"После дедупликации: {len(df)} уникальных событий")
 
-    print("✅  events.json создан/обновлён")
-    session.close()
+        # Геокодинг с отслеживанием прогресса
+        lats, lons = [], []
+        processed = 0
 
+        for addr in df["location"]:
+            if processed % 10 == 0:
+                logger.info(f"Прогресс геокодинга: {processed}/{len(df)}")
+
+            lat, lon = geocode_addr(addr)
+            lats.append(lat)
+            lons.append(lon)
+            processed += 1
+
+        df["lat"] = lats
+        df["lon"] = lons
+
+        # Сообщить о пропущенных координатах
+        missing = df[df["lat"].isna()]
+        missing_count = len(missing)
+        if missing_count > 0:
+            missing_addrs = ", ".join(sorted(set(missing["location"].tolist())))
+            logger.warning(f"Отсутствуют координаты для {missing_count} адресов: {missing_addrs[:800]}{'...' if len(missing_addrs) > 800 else ''}")
+
+        # Фильтровать события без координат
+        df = df.dropna(subset=["lat", "lon"])
+        logger.info(f"Финальный датасет: {len(df)} событий с координатами")
+
+        # Сохранить результат
+        output_data = df[["title", "date", "location", "lat", "lon", "text"]].sort_values("date")
+        OUTPUT_JSON.write_text(
+            output_data.to_json(orient="records", force_ascii=False, indent=2),
+            encoding="utf-8"
+        )
+
+        # Сохранить кэш
+        save_cache(geocache)
+
+        # Сохранить детальный лог если включено
+        if GEOCODE_SAVE_LOG:
+            try:
+                LOG_FILE.write_text(json.dumps(geolog, ensure_ascii=False, indent=2), encoding="utf-8")
+            except Exception as e:
+                logger.error(f"Не удалось сохранить лог геокодинга: {e}")
+
+        logger.info("Обработка событий завершена успешно")
+
+    except Exception as e:
+        logger.critical(f"Критическая ошибка в main: {e}", exc_info=True)
+        sys.exit(1)
+    finally:
+        # Всегда закрывать сессию
+        session.close()
+        logger.info("Сессия закрыта")
 
 if __name__ == "__main__":
     main()
