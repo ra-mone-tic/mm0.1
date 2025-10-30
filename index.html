@@ -368,12 +368,12 @@
       .search-field { padding: 8px 12px; }
       #global-search { font-size: 15px; }
       .welcome-modal__content {
-        top: 12vh;
-        bottom: max(12vh, env(safe-area-inset-bottom));
+        top: calc(90px + 2.5vw);
+        bottom: calc(90px + 2.5vw);
         left: 50%;
         transform: translateX(-50%);
         height: auto;
-        max-height: 76vh;
+        max-height: calc(100vh - 180px - 5vw);
       }
     }
 
@@ -627,10 +627,10 @@
         left: 10vw;
         width: 80vw;
         height: auto;
-        top: 12vh;
-        bottom: max(12vh, env(safe-area-inset-bottom));
+        top: calc(90px + 10vw);
+        bottom: calc(90px + 10vw);
         transform: none;
-        max-height: 76vh;
+        max-height: calc(100vh - 180px - 20vw);
       }
       .welcome-logo {
         width: 50px;
@@ -649,11 +649,11 @@
       .welcome-modal__content {
         padding: 16px;
         height: auto;
-        top: calc(12vh + env(safe-area-inset-top));
-        bottom: max(12vh, env(safe-area-inset-bottom));
+        top: calc(90px + 2.5vw + env(safe-area-inset-top));
+        bottom: calc(90px + 2.5vw);
         left: 50%;
         transform: translateX(-50%);
-        max-height: 76vh;
+        max-height: calc(100vh - 180px - 5vw);
       }
       .welcome-logo {
         width: 45px;
@@ -673,12 +673,12 @@
       .welcome-modal__content {
         padding: 12px;
         height: auto;
-        top: 12vh;
-        bottom: max(12vh, env(safe-area-inset-bottom));
+        top: calc(90px + 10vw);
+        bottom: calc(90px + 10vw);
         left: calc(10vw + env(safe-area-inset-left));
         right: calc(10vw + env(safe-area-inset-right));
         transform: none;
-        max-height: 76vh;
+        max-height: calc(100vh - 180px - 20vw);
       }
       .welcome-logo {
         width: 40px;
