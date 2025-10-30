@@ -34,7 +34,7 @@
     #controls {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 8px; /* Единый gap между всеми элементами */
       flex-wrap: wrap;
       padding: 12px;
       padding-top: calc(12px + env(safe-area-inset-top));
@@ -43,7 +43,9 @@
       background: var(--surface-1);
       border-bottom: var(--border);
       position: relative;
-      height: 90px;
+      height: 90px; /* 29px + padding */
+      min-height: 90px;
+      max-height: 90px;
       box-sizing: border-box;
     }
     #layout { flex: 1; display: flex; }
@@ -53,6 +55,10 @@
       flex-direction: column;
       gap: 4px;
       flex: 0 0 160px;
+      margin-left: 0;
+      margin-right: 0;
+      padding-left: 12px; /* Единый отступ слева */
+      justify-content: center;
     }
 
     .date-input-container label {
@@ -78,8 +84,8 @@
       cursor:pointer;
       transition: all var(--fx-fast);
       box-shadow: var(--shadow-sm);
-      height:29px;
-      min-width:160px;
+      height:44px;
+      min-width: 120px;
       /* Центрируем текст даты для всех адаптивов */
       text-align: center;
       /* Полностью отключаем системный календарь браузера */
@@ -120,17 +126,33 @@
       text-align: center;
     }
     #logo {
-      height: 40px;
-      max-width: 100%;
-      cursor: pointer;
-      min-height: 40px;
+      height: 44px;
+      min-width: 44px;
       display: flex;
       align-items: center;
-      padding: 2px;
+      padding: 0;
       border-radius: var(--radius-xs);
       transition: background var(--fx-fast);
     }
     #logo:hover { background: var(--surface-2); }
+    #help, #burger {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      max-width: 44px;
+      max-height: 44px;
+      font-size: 22px;
+      padding: 0;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-1);
+      transition: background var(--fx-fast);
+    }
+    #help:hover, #burger:hover { background: var(--surface-2); }
+    #help:focus-visible, #burger:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
     .header-buttons { display: flex; gap: 8px; margin-left: auto; }
     #help {
       cursor: pointer;
