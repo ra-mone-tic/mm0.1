@@ -22,6 +22,7 @@
 
 /* 1) Base tokens */
 :root{
+  --control-height: 44px;  /* Unified height for control elements (logo, buttons, date input) */
   --surface-0:#fff;        /* page background */
   --surface-1:#f7f7f9;     /* panels/cards */
   --surface-2:#eceef1;     /* hover/bg subtle */

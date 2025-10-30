@@ -79,13 +79,14 @@
       accent-color: var(--brand);
       color-scheme: light;
       font-family:var(--font-ui);
-      font-size:18px;
+      font-size: calc(var(--control-height) * 0.4);
       font-weight:600;
       cursor:pointer;
       transition: all var(--fx-fast);
       box-shadow: var(--shadow-sm);
-      height:44px;
+      height: var(--control-height);
       min-width: 120px;
+      box-sizing: border-box;
       /* Центрируем текст даты для всех адаптивов */
       text-align: center;
       /* Полностью отключаем системный календарь браузера */
@@ -126,23 +127,24 @@
       text-align: center;
     }
     #logo {
-      height: 44px;
-      min-width: 44px;
+      height: var(--control-height);
+      min-width: var(--control-height);
       display: flex;
       align-items: center;
       padding: 0;
       border-radius: var(--radius-xs);
       transition: background var(--fx-fast);
+      box-sizing: border-box;
     }
     #logo:hover { background: var(--surface-2); }
     #help, #burger {
-      width: 44px;
-      height: 44px;
-      min-width: 44px;
-      min-height: 44px;
-      max-width: 44px;
-      max-height: 44px;
-      font-size: 22px;
+      width: var(--control-height);
+      height: var(--control-height);
+      min-width: var(--control-height);
+      min-height: var(--control-height);
+      max-width: var(--control-height);
+      max-height: var(--control-height);
+      font-size: calc(var(--control-height) * 0.5);
       padding: 0;
       border-radius: 9999px;
       display: flex;
@@ -150,47 +152,51 @@
       justify-content: center;
       background: var(--surface-1);
       transition: background var(--fx-fast);
+      box-sizing: border-box;
+      line-height: var(--control-height);
     }
     #help:hover, #burger:hover { background: var(--surface-2); }
     #help:focus-visible, #burger:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
     .header-buttons { display: flex; gap: 8px; margin-left: auto; }
     #help {
       cursor: pointer;
-      font-size: 22px;
       font-weight: 700;
       color: var(--text-0);
       user-select: none;
       position: relative;
       z-index: 1300;
       background: var(--surface-1);
-      padding: 8px;
+      padding: 0;
       border-radius:50%;
       transition: background var(--fx-fast);
-      min-height: 44px;
-      min-width: 44px;
+      min-height: var(--control-height);
+      min-width: var(--control-height);
       display: flex;
       align-items: center;
       justify-content: center;
+      box-sizing: border-box;
+      line-height: var(--control-height);
     }
     #help:hover { background: var(--surface-2); }
     #help:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
     #burger {
       cursor: pointer;
-      font-size: 22px;
       font-weight: 700;
       color: var(--text-0);
       user-select: none;
       position: relative;
       z-index: 1300;
       background: var(--surface-1);
-      padding: 8px;
+      padding: 0;
       border-radius:50%;
       transition: background var(--fx-fast);
-      min-height: 44px;
-      min-width: 44px;
+      min-height: var(--control-height);
+      min-width: var(--control-height);
       display: flex;
       align-items: center;
       justify-content: center;
+      box-sizing: border-box;
+      line-height: var(--control-height);
     }
     #burger:hover { background: var(--surface-2); }
     #burger:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
@@ -398,8 +404,8 @@
 
     /* Медиа-запросы для мобильных устройств */
     @media (max-width: 768px) {
+      :root { --control-height: 44px; }
       #layout { flex-direction: column; }
-      #logo { height: 32px; min-height: 44px; min-width: 44px; }
       #sidebar { width: 80%; max-width: 320px; }
       #sidebar hr { margin-top: 45px; }
       #bottomBar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
@@ -417,15 +423,15 @@
 
     /* Планшеты и большие телефоны */
     @media (max-width: 640px) {
+      :root { --control-height: 40px; }
       #controls {
         gap: 6px;
         padding: 10px 8px;
       }
-      #logo { height: 30px; min-height: 40px; min-width: 40px; }
       .date-input-container { flex: 0 0 140px; }
       input[type="date"] { font-size: 14px; min-width: 140px; }
       .date-input-container label { font-size: 11px; }
-      #burger { min-width: 40px; min-height: 40px; padding: 6px; font-size: 20px; }
+      #burger { font-size: 20px; }
       #sidebar hr { margin-top: 40px; }
       .welcome-modal {
         top: env(safe-area-inset-top);
@@ -438,45 +444,45 @@
 
     /* Стандартные мобильные телефоны */
     @media (max-width: 480px) {
+      :root { --control-height: 36px; }
       #controls {
         gap: 2px;
         padding: 6px 4px;
         flex-wrap: nowrap;
       }
-      #logo { height: 24px; min-height: 32px; min-width: 32px; }
       .date-input-container { flex: 0 1 auto; min-width: 80px; max-width: 90px; margin-right: 20px; }
       input[type="date"] { font-size: 12px; min-width: auto; width: 100%; }
       .date-input-container label { font-size: 9px; }
-      #help { font-size: 18px; padding: 6px; min-width: 36px; min-height: 36px; }
-      #burger { font-size: 18px; padding: 6px; min-width: 36px; min-height: 36px; }
+      #help { padding: 6px; }
+      #burger { padding: 6px; }
       #sidebar hr { margin-top: 35px; }
     }
 
     /* Узкие экраны (iPhone SE, старые устройства) */
     @media (max-width: 375px) {
+      :root { --control-height: 32px; }
       #controls {
         gap: 2px;
         padding: 6px 4px;
         justify-content: space-between;
       }
-      #logo { height: 24px; min-height: 32px; min-width: 32px; }
       .date-input-container { flex: 1; max-width: 120px; min-width: 70px; }
       input[type="date"] { font-size: 12px; min-width: auto; width: 100%; }
       .date-input-container label { font-size: 9px; }
-      #help { font-size: 18px; padding: 4px; min-width: 32px; min-height: 32px; }
-      #burger { font-size: 18px; padding: 4px; min-width: 32px; min-height: 32px; }
+      #help { padding: 4px; }
+      #burger { padding: 4px; }
       #sidebar hr { margin-top: 30px; }
     }
 
     /* Критически узкие экраны */
     @media (max-width: 320px) {
+      :root { --control-height: 20px; }
       #controls {
         flex-direction: column;
         align-items: stretch;
         gap: 4px;
       }
       #logo {
-        height: 20px;
         align-self: center;
         order: -1;
       }
@@ -493,7 +499,6 @@
       }
       #burger {
         align-self: flex-end;
-        font-size: 16px;
         padding: 2px;
       }
       #sidebar hr { margin-top: 25px; }
