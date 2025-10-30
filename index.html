@@ -79,14 +79,13 @@
       accent-color: var(--brand);
       color-scheme: light;
       font-family:var(--font-ui);
-      font-size: calc(var(--control-height) * 0.4);
+      font-size:18px;
       font-weight:600;
       cursor:pointer;
       transition: all var(--fx-fast);
       box-shadow: var(--shadow-sm);
       height: var(--control-height);
       min-width: 120px;
-      box-sizing: border-box;
       /* Центрируем текст даты для всех адаптивов */
       text-align: center;
       /* Полностью отключаем системный календарь браузера */
@@ -134,7 +133,6 @@
       padding: 0;
       border-radius: var(--radius-xs);
       transition: background var(--fx-fast);
-      box-sizing: border-box;
     }
     #logo:hover { background: var(--surface-2); }
     #help, #burger {
@@ -144,7 +142,7 @@
       min-height: var(--control-height);
       max-width: var(--control-height);
       max-height: var(--control-height);
-      font-size: calc(var(--control-height) * 0.5);
+      font-size: 22px;
       padding: 0;
       border-radius: 9999px;
       display: flex;
@@ -152,21 +150,20 @@
       justify-content: center;
       background: var(--surface-1);
       transition: background var(--fx-fast);
-      box-sizing: border-box;
-      line-height: var(--control-height);
     }
     #help:hover, #burger:hover { background: var(--surface-2); }
     #help:focus-visible, #burger:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
     .header-buttons { display: flex; gap: 8px; margin-left: auto; }
     #help {
       cursor: pointer;
+      font-size: 22px;
       font-weight: 700;
       color: var(--text-0);
       user-select: none;
       position: relative;
       z-index: 1300;
       background: var(--surface-1);
-      padding: 0;
+      padding: 8px;
       border-radius:50%;
       transition: background var(--fx-fast);
       min-height: var(--control-height);
@@ -174,20 +171,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-sizing: border-box;
-      line-height: var(--control-height);
     }
     #help:hover { background: var(--surface-2); }
     #help:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
     #burger {
       cursor: pointer;
+      font-size: 22px;
       font-weight: 700;
       color: var(--text-0);
       user-select: none;
       position: relative;
       z-index: 1300;
       background: var(--surface-1);
-      padding: 0;
+      padding: 8px;
       border-radius:50%;
       transition: background var(--fx-fast);
       min-height: var(--control-height);
@@ -195,8 +191,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      box-sizing: border-box;
-      line-height: var(--control-height);
     }
     #burger:hover { background: var(--surface-2); }
     #burger:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
