@@ -1,0 +1,299 @@
+/**
+ * MeowMap Utility Functions
+ * Shared utility functions used across modules
+ */
+
+import { DEVICE_TODAY, MESSAGES } from './constants.js';
+
+/**
+ * Debounce function calls
+ * @param {Function} fn - Function to debounce
+ * @param {number} delay - Delay in milliseconds
+ * @returns {Function} Debounced function
+ */
+export function debounce(fn, delay) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
+/**
+ * Format location string by removing city duplicates
+ * @param {string} location - Location string
+ * @returns {string} Formatted location
+ */
+export function formatLocation(location) {
+  if (!location) return '';
+  return location.replace(/,?\s*Калининград\s*$/i, '');
+}
+
+/**
+ * Extract time information from event text
+ * @param {string} text - Event description text
+ * @returns {Object|null} Time information or null
+ */
+export function extractTimeFromText(text) {
+  if (!text) return null;
+
+  // Look for time in formats: "18:00", "18:00-22:00"
+  // Use stricter patterns to avoid confusing with dates dd.mm
+  const timePatterns = [
+    /(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/,  // 18:00 - 22:00 (with colon only)
+    /(\d{1,2}):(\d{2})/   // 18:00 (with colon only)
+  ];
+
+  for (const pattern of timePatterns) {
+    const match = text.match(pattern);
+    if (match) {
+      if (match.length === 5) {
+        // Range format
+        const startHour = parseInt(match[1]);
+        const startMin = parseInt(match[2]);
+        const endHour = parseInt(match[3]);
+        const endMin = parseInt(match[4]);
+
+        // Validate as time, not date
+        if (startHour >= 0 && startHour <= 23 &&
+            startMin >= 0 && startMin <= 59 &&
+            endHour >= 0 && endHour <= 23 &&
+            endMin >= 0 && endMin <= 59) {
+          return {
+            full: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}-${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`,
+            start: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
+            end: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`,
+            hasEndTime: true
+          };
+        }
+      } else if (match.length === 3) {
+        // Single time format
+        const hour = parseInt(match[1]);
+        const min = parseInt(match[2]);
+
+        if (hour >= 0 && hour <= 23 && min >= 0 && min <= 59) {
+          return {
+            full: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
+            start: `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`,
+            end: null,
+            hasEndTime: false
+          };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Generate event date label with time information
+ * @param {string} dateStr - Date string (YYYY-MM-DD)
+ * @param {string} eventText - Event description text
+ * @param {boolean} showTimeAgo - Whether to show "ended X hours ago"
+ * @param {boolean} showOnlyTimeForToday - Show only time for today's events
+ * @returns {string} Formatted date label
+ */
+export function getEventDateLabel(dateStr, eventText = null, showTimeAgo = false, showOnlyTimeForToday = false) {
+  const timeStr = eventText ? extractTimeFromText(eventText) : null;
+
+  if (dateStr === DEVICE_TODAY) {
+    if (showOnlyTimeForToday) {
+      return timeStr ? `<span style="font-style: italic;">${timeStr.full}</span>` : '';
+    } else {
+      let result = '<span style="font-weight: bold; font-style: italic;">Сегодня</span>';
+
+      if (timeStr) {
+        result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
+      }
+
+      if (showTimeAgo && timeStr && timeStr.hasEndTime) {
+        const timeAgoText = getTimeAgoText(dateStr, timeStr.end, timeStr.start);
+        if (timeAgoText) {
+          result += `<br><span style="font-size: 11px; color: var(--text-2);">${timeAgoText}</span>`;
+        }
+      }
+
+      return result;
+    }
+  }
+
+  if (!dateStr) return '';
+
+  // Convert yyyy-mm-dd to dd.mm.yy format
+  const m = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) {
+    const day = parseInt(m[3]);
+    const month = parseInt(m[2]);
+    const year = m[1].slice(-2); // last 2 digits of year
+    const formattedDate = `${day.toString().padStart(2, '0')}.${month.toString().padStart(2, '0')}.${year}`;
+
+    let result = `<span style="font-weight: bold; font-style: italic;">${formattedDate}</span>`;
+
+    if (timeStr) {
+      result += ` <span style="font-style: italic;">${timeStr.full}</span>`;
+    }
+
+    if (showTimeAgo && timeStr && timeStr.hasEndTime) {
+      const timeAgoText = getTimeAgoText(dateStr, timeStr.end, timeStr.start);
+      if (timeAgoText) {
+        result += `<br><span style="font-size: 11px; color: var(--text-2);">${timeAgoText}</span>`;
+      }
+    }
+
+    return result;
+  }
+
+  return `<span style="font-weight: bold; font-style: italic;">${dateStr}</span>`;
+}
+
+/**
+ * Get day of week name in Russian
+ * @param {number} dayIndex - Day index (0 = Sunday, 1 = Monday, etc.)
+ * @returns {string} Day name
+ */
+export function getDayOfWeekName(dayIndex) {
+  const daysOfWeek = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+  return daysOfWeek[dayIndex] || '';
+}
+
+/**
+ * Get day of week from date string
+ * @param {string} dateStr - Date string (YYYY-MM-DD)
+ * @returns {number} Day index (0 = Sunday, 1 = Monday, etc.)
+ */
+export function getDayOfWeekFromDate(dateStr) {
+  if (!dateStr) return -1;
+  const date = new Date(dateStr + 'T00:00:00');
+  return date.getDay();
+}
+
+/**
+ * Calculate time ago text for ended events
+ * @param {string} eventDateStr - Event date (YYYY-MM-DD)
+ * @param {string} endTimeStr - End time (HH:MM)
+ * @param {string} startTimeStr - Start time (HH:MM)
+ * @returns {string|null} Time ago text or null
+ */
+export function getTimeAgoText(eventDateStr, endTimeStr, startTimeStr) {
+  if (!endTimeStr || !eventDateStr) return null;
+
+  // Calculate exact end time considering date and midnight rollover
+  let endDateStr = eventDateStr;
+  const startHour = startTimeStr ? parseInt(startTimeStr.split(':')[0]) : 0;
+  const endHour = parseInt(endTimeStr.split(':')[0]);
+
+  if (endHour < startHour) {
+    // Event ends next day
+    const date = new Date(eventDateStr);
+    date.setDate(date.getDate() + 1);
+    endDateStr = date.toISOString().slice(0, 10);
+  }
+
+  const endTime = new Date(endDateStr + 'T' + endTimeStr + ':00');
+  const now = new Date();
+
+  // Event hasn't ended yet
+  if (endTime > now) return null;
+
+  const diffInMs = now - endTime;
+  const hours = Math.ceil(diffInMs / (1000 * 60 * 60));
+
+  if (hours === 1) return 'Закончилось 1 час назад';
+  if (hours < 5) return `Закончилось ${hours} часа назад`;
+  return `Закончилось ${hours} часов назад`;
+}
+
+/**
+ * Generate transliterations for search
+ * @param {string} text - Text to transliterate
+ * @returns {Set} Set of transliterations
+ */
+export function generateTransliterations(text) {
+  const results = new Set([text]);
+
+  // Basic transliterations
+  if (/[а-яё]/i.test(text)) {
+    results.add(transliterateToEnglish(text));
+  }
+
+  if (/[a-z]/i.test(text)) {
+    results.add(transliterateToRussian(text));
+  }
+
+  return results;
+}
+
+/**
+ * Transliterate Russian to English
+ * @param {string} text - Russian text
+ * @returns {string} English transliteration
+ */
+export function transliterateToEnglish(text) {
+  const translitMap = {
+    'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh',
+    'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
+    'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'kh', 'ц': 'ts',
+    'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu',
+    'я': 'ya', 'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
+    'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N',
+    'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F', 'Х': 'Kh',
+    'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch', 'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E',
+    'Ю': 'Yu', 'Я': 'Ya'
+  };
+
+  return text.split('').map(char => translitMap[char] || char).join('');
+}
+
+/**
+ * Transliterate English to Russian (extended)
+ * @param {string} text - English text
+ * @returns {string} Russian transliteration
+ */
+export function transliterateToRussian(text) {
+  const translitMap = {
+    'a': 'а', 'b': 'б', 'v': 'в', 'g': 'г', 'd': 'д', 'e': 'е', 'yo': 'ё', 'zh': 'ж',
+    'z': 'з', 'i': 'и', 'y': 'й', 'k': 'к', 'l': 'л', 'm': 'м', 'n': 'н', 'o': 'о',
+    'p': 'п', 'r': 'р', 's': 'с', 't': 'т', 'u': 'у', 'f': 'ф', 'kh': 'х', 'ц': 'ts',
+    'ch': 'ч', 'sh': 'ш', 'sch': 'щ', '': 'ъ', 'y': 'ы', '': 'ь', 'e': 'э', 'yu': 'ю',
+    'ya': 'я', 'ye': 'е', 'yi': 'й', 'h': 'х', 'c': 'к', 'w': 'в', 'q': 'к',
+    'A': 'А', 'B': 'Б', 'V': 'В', 'G': 'Г', 'D': 'Д', 'E': 'Е', 'Yo': 'Ё', 'Zh': 'Ж',
+    'Z': 'З', 'I': 'И', 'Y': 'Й', 'K': 'К', 'L': 'Л', 'М': 'М', 'N': 'Н', 'O': 'О',
+    'P': 'П', 'R': 'Р', 'S': 'С', 'T': 'Т', 'У': 'У', 'F': 'Ф', 'Kh': 'Х', 'Ts': 'Ц',
+    'Ch': 'Ч', 'Sh': 'Ш', 'Sch': 'Щ', '': 'Ъ', 'Y': 'Ы', '': 'Ь', 'E': 'Э', 'Yu': 'Ю',
+    'Ya': 'Я', 'Ye': 'Е', 'Yi': 'Й', 'H': 'Х', 'C': 'К', 'W': 'В', 'Q': 'К'
+  };
+
+  return text.replace(/yo|zh|kh|ts|ch|sh|sch|y|ye|yi|a|b|v|g|d|e|f|h|i|k|l|m|n|o|p|r|s|t|u|w|q|y|z/gi, match => {
+    return translitMap[match.toLowerCase()] || match;
+  });
+}
+
+/**
+ * Bind keyboard activation for elements
+ * @param {HTMLElement} element - Element to bind
+ * @param {Function} handler - Handler function
+ */
+export function bindKeyboardActivation(element, handler) {
+  if (!element) return;
+  element.addEventListener('keydown', event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handler();
+    }
+  });
+}
+
+/**
+ * Create event ID from event data
+ * @param {Object} event - Event object
+ * @returns {string} Event ID
+ */
+export function makeEventId(event) {
+  const source = `${event.date}|${event.title}|${event.lat}|${event.lon}`;
+  let hash = 5381;
+  for (let i = 0; i < source.length; i += 1) {
+    hash = ((hash << 5) + hash) + source.charCodeAt(i);
+  }
+  return `e${(hash >>> 0).toString(16)}`;
+}
