@@ -63,8 +63,6 @@ OUTPUT_JSON = Path("events.json")
 CACHE_FILE = Path("geocode_cache.json")
 LOG_FILE = Path("geocode_log.json")
 
-assert TOKEN, "VK_TOKEN не задан (секрет репозитория или .env требуется)"
-
 # ─────────── УТИЛИТЫ ───────────
 def init_session() -> requests.Session:
     """Создать сессию requests с логикой повтора."""
@@ -254,9 +252,13 @@ def extract(text: str):
     if not re.search(CITY_WORDS, loc, re.I):
         loc += ", Калининград"
 
-    # Заголовок: первая строка без "DD.MM |"
-    first_line = text.split('\n', 1)[0]
-    title = re.sub(r"^\s*\d{2}\.\d{2}\s*\|\s*", "", first_line).strip()
+    # Заголовок: строка с датой без "DD.MM |"
+    lines = text.split('\n')
+    title = ""
+    for line in lines:
+        if re.search(r"\b\d{2}\.\d{2}\b", line):
+            title = re.sub(r"^\s*\d{2}\.\d{2}\s*\|\s*", "", line).strip()
+            break
 
     return {
         'title': title,
@@ -267,6 +269,10 @@ def extract(text: str):
 
 def main():
     """Основной обработчик с полной обработкой ошибок."""
+    if not TOKEN:
+        logger.critical("VK_TOKEN не задан (секрет репозитория или .env требуется)")
+        sys.exit(1)
+
     try:
         logger.info("Запуск обработки событий...")
 
