@@ -4,7 +4,7 @@
  */
 
 import { JSON_URL, SELECTORS, DEVICE_TODAY } from './constants.js';
-import { makeEventId, extractTimeFromText, getTimeAgoText, loadGeocodeCache, updateEventCoordinates } from './utils.js';
+import { makeEventId, extractTimeFromText, getTimeAgoText } from './utils.js';
 import { mapManager } from './map.js';
 import { eventListManager } from './event-list.js';
 import { searchManager } from './search.js';
@@ -69,9 +69,6 @@ async function loadEvents() {
   try {
     console.log('Loading events...');
 
-    // Load geocode cache first
-    await loadGeocodeCache();
-
     const response = await fetch(JSON_URL);
 
     if (!response.ok) {
@@ -90,9 +87,6 @@ async function loadEvents() {
       id: event.id || makeEventId(event),
       dateLabel: getEventDateLabel(event.date, event.text)
     }));
-
-    // Update coordinates from cache
-    appState.allEvents.forEach(event => updateEventCoordinates(event));
 
     // Split events into upcoming and archive
     appState.upcomingEvents = appState.allEvents.filter(event => {
