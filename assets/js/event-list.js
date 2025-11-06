@@ -10,7 +10,8 @@ import {
   getDayOfWeekFromDate,
   getTimeAgoText,
   formatLocation,
-  bindKeyboardActivation
+  bindKeyboardActivation,
+  sanitizeHtml
 } from './utils.js';
 
 /**
@@ -377,7 +378,7 @@ class EventListManager {
     const dateLabel = getEventDateLabel(event.date, event.text, showTimeAgo, showOnlyTimeForToday);
     const location = formatLocation(event.location);
 
-    item.innerHTML = `<strong>${event.title}</strong><br><span style="color:var(--text-1);">${location}</span><br><i style="color:var(--text-1);">${dateLabel}</i>`;
+    item.innerHTML = `<strong>${sanitizeHtml(event.title)}</strong><br><span style="color:var(--text-1);">${sanitizeHtml(location)}</span><br><i style="color:var(--text-1);">${sanitizeHtml(dateLabel)}</i>`;
 
     return item;
   }

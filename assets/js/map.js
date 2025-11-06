@@ -4,7 +4,7 @@
  */
 
 import { MAP_OPTIONS, CONTROLS, SELECTORS, CLASSES, DURATIONS } from './constants.js';
-import { debounce, bindKeyboardActivation } from './utils.js';
+import { debounce, bindKeyboardActivation, sanitizeHtml } from './utils.js';
 
 /**
  * Custom navigation control for MapLibre
@@ -340,13 +340,13 @@ class MapManager {
 
     return `
       <div class="popup-content" style="font-family:var(--font-ui);padding-bottom:60px;">
-        <div><strong>${event.title}</strong></div>
-        <div style="color:var(--text-1);">${event.location}</div>
-        <div style="color:var(--text-1);">${event.dateLabel}</div>
+        <div><strong>${sanitizeHtml(event.title)}</strong></div>
+        <div style="color:var(--text-1);">${sanitizeHtml(event.location)}</div>
+        <div style="color:var(--text-1);">${sanitizeHtml(event.dateLabel)}</div>
         <div class="popup-text" style="margin:8px 0 -29px 0;max-height:72px;overflow-y:scroll;position:relative;">
-          ${postText.replace(/\n/g, '<br>')}
+          ${sanitizeHtml(postText).replace(/\n/g, '<br>')}
         </div>
-        <div class="popup-text-full" style="display:none;max-height:200px;overflow:auto;margin:8px 0 -29px 0;">${postText.replace(/\n/g, '<br>')}</div>
+        <div class="popup-text-full" style="display:none;max-height:200px;overflow:auto;margin:8px 0 -29px 0;">${sanitizeHtml(postText).replace(/\n/g, '<br>')}</div>
         <div style="position:absolute;bottom:6px;left:6px;right:6px;display:flex;justify-content:space-between;gap:6px;">
           ${expandButton.replace('position: absolute; bottom: 8px; left: 8px;', 'position: relative;')}
           ${shareButton.replace('position: absolute; right: 8px; bottom: 8px;', 'position: relative;')}

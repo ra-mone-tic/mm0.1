@@ -335,7 +335,7 @@ export function transliterateToRussian(text) {
     'ch': 'ч', 'sh': 'ш', 'sch': 'щ', '': 'ъ', 'y': 'ы', '': 'ь', 'e': 'э', 'yu': 'ю',
     'ya': 'я', 'ye': 'е', 'yi': 'й', 'h': 'х', 'c': 'к', 'w': 'в', 'q': 'к',
     'A': 'А', 'B': 'Б', 'V': 'В', 'G': 'Г', 'D': 'Д', 'E': 'Е', 'Yo': 'Ё', 'Zh': 'Ж',
-    'Z': 'З', 'I': 'И', 'Y': 'Й', 'K': 'К', 'L': 'Л', 'М': 'М', 'N': 'Н', 'O': 'О',
+    'Z': 'З', 'I': 'И', 'Y': 'Й', 'K': 'К', 'Л': 'Л', 'М': 'М', 'N': 'Н', 'O': 'О',
     'P': 'П', 'R': 'Р', 'S': 'С', 'T': 'Т', 'У': 'У', 'F': 'Ф', 'Kh': 'Х', 'Ts': 'Ц',
     'Ch': 'Ч', 'Sh': 'Ш', 'Sch': 'Щ', '': 'Ъ', 'Y': 'Ы', '': 'Ь', 'E': 'Э', 'Yu': 'Ю',
     'Ya': 'Я', 'Ye': 'Е', 'Yi': 'Й', 'H': 'Х', 'C': 'К', 'W': 'В', 'Q': 'К'
@@ -344,6 +344,20 @@ export function transliterateToRussian(text) {
   return text.replace(/yo|zh|kh|ts|ch|sh|sch|y|ye|yi|a|b|v|g|d|e|f|h|i|k|l|m|n|o|p|r|s|t|u|w|q|y|z/gi, match => {
     return translitMap[match.toLowerCase()] || match;
   });
+}
+
+/**
+ * Generate unique event ID from event data
+ * @param {Object} event - Event object
+ * @returns {string} Unique event ID
+ */
+export function makeEventId(event) {
+  const source = `${event.date}|${event.title}|${event.lat}|${event.lon}`;
+  let hash = 5381;
+  for (let i = 0; i < source.length; i += 1) {
+    hash = ((hash << 5) + hash) + source.charCodeAt(i);
+  }
+  return `e${(hash >>> 0).toString(16)}`;
 }
 
 /**
@@ -362,15 +376,33 @@ export function bindKeyboardActivation(element, handler) {
 }
 
 /**
- * Create event ID from event data
- * @param {Object} event - Event object
- * @returns {string} Event ID
+ * Sanitize HTML content to prevent XSS attacks
+ * Removes dangerous tags and attributes, allows only safe text formatting
+ * @param {string} html - HTML content to sanitize
+ * @returns {string} Sanitized HTML content
  */
-export function makeEventId(event) {
-  const source = `${event.date}|${event.title}|${event.lat}|${event.lon}`;
-  let hash = 5381;
-  for (let i = 0; i < source.length; i += 1) {
-    hash = ((hash << 5) + hash) + source.charCodeAt(i);
-  }
-  return `e${(hash >>> 0).toString(16)}`;
+export function sanitizeHtml(html) {
+  if (!html || typeof html !== 'string') return '';
+
+  // Create a temporary DOM element to parse HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+
+  // Remove dangerous elements
+  const dangerousElements = tempDiv.querySelectorAll('script, style, iframe, object, embed, form, input, button, link, meta');
+  dangerousElements.forEach(element => element.remove());
+
+  // Remove dangerous attributes
+  const allElements = tempDiv.querySelectorAll('*');
+  allElements.forEach(element => {
+    // Remove event handlers and dangerous attributes
+    const dangerousAttrs = ['onclick', 'onload', 'onerror', 'onsubmit', 'onmouseover', 'onmouseout', 'onkeydown', 'onkeyup', 'onkeypress', 'onchange', 'onfocus', 'onblur', 'onselect', 'oncontextmenu', 'ondblclick', 'onmousedown', 'onmouseup', 'onmousemove', 'onmouseenter', 'onmouseleave', 'ontouchstart', 'ontouchend', 'ontouchmove', 'ontouchcancel', 'onscroll', 'onwheel', 'oncopy', 'oncut', 'onpaste', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onabort', 'onbeforeunload', 'onhashchange', 'onloadstart', 'onprogress', 'onstalled', 'onsuspend', 'onemptied', 'onloadeddata', 'onloadedmetadata', 'oncanplay', 'oncanplaythrough', 'onplay', 'onpause', 'onvolumechange', 'onwaiting', 'onseeking', 'onseeked', 'ontimeupdate', 'onended', 'onratechange', 'ondurationchange'];
+    dangerousAttrs.forEach(attr => {
+      if (element.hasAttribute(attr)) {
+        element.removeAttribute(attr);
+      }
+    });
+  });
+
+  return tempDiv.innerHTML;
 }

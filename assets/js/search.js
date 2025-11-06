@@ -4,7 +4,7 @@
  */
 
 import { SELECTORS, CLASSES, MESSAGES, DURATIONS, DEVICE_TODAY } from './constants.js';
-import { debounce, generateTransliterations } from './utils.js';
+import { debounce, generateTransliterations, sanitizeHtml } from './utils.js';
 
 /**
  * Search state and management
@@ -280,7 +280,7 @@ class SearchManager {
       item.tabIndex = 0;
 
       const dateLabel = this._getSimpleDateLabel(event.date, event.text);
-      item.innerHTML = `<strong>${event.title}</strong><span>${event.location}</span><span>${dateLabel}</span>`;
+      item.innerHTML = `<strong>${sanitizeHtml(event.title)}</strong><span>${sanitizeHtml(event.location)}</span><span>${sanitizeHtml(dateLabel)}</span>`;
 
       this.searchResults.appendChild(item);
     });

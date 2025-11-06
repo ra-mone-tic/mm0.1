@@ -225,24 +225,24 @@ html[data-theme="neon"] .btn-primary{
   box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 10px 30px rgba(0,0,0,.45);
 }
 /* neon popup buttons */
-html[data-theme="neon"] button.expand-btn,
-html[data-theme="neon"] button.share-btn {
-  background: #2B2A29 !important;
-  color: var(--text-0) !important;
+html[data-theme="neon"] .popup-text button.expand-btn,
+html[data-theme="neon"] .popup-text button.share-btn {
+  background: #2B2A29;
+  color: var(--text-0);
 }
-html[data-theme="neon"] button.expand-btn:hover,
-html[data-theme="neon"] button.share-btn:hover {
-  background: color-mix(in srgb, #2B2A29 85%, #0a0b0f) !important;
+html[data-theme="neon"] .popup-text button.expand-btn:hover,
+html[data-theme="neon"] .popup-text button.share-btn:hover {
+  background: color-mix(in srgb, #2B2A29 85%, #0a0b0f);
 }
 
 /* minimal popup buttons */
-html[data-theme="minimal"] button.expand-btn,
-html[data-theme="minimal"] button.share-btn {
-  color: var(--text-0) !important;
+html[data-theme="minimal"] .popup-text button.expand-btn,
+html[data-theme="minimal"] .popup-text button.share-btn {
+  color: var(--text-0);
 }
-html[data-theme="minimal"] button.expand-btn:hover,
-html[data-theme="minimal"] button.share-btn:hover {
-  background: color-mix(in srgb, #d2cde7 85%, white) !important;
+html[data-theme="minimal"] .popup-text button.expand-btn:hover,
+html[data-theme="minimal"] .popup-text button.share-btn:hover {
+  background: color-mix(in srgb, #d2cde7 85%, white);
 }
 
 /* Calendar styles for neon theme */
@@ -303,13 +303,13 @@ html[data-theme="test"]{
 html[data-theme="test"] .sidebar-footer {
   background: #f9c5ff; /* Непрозрачный вариант surface-1 для test */
 }
-html[data-theme="test"] button.expand-btn,
-html[data-theme="test"] button.share-btn {
-  color: var(--text-0) !important;
+html[data-theme="test"] .popup-text button.expand-btn,
+html[data-theme="test"] .popup-text button.share-btn {
+  color: var(--text-0);
 }
-html[data-theme="test"] button.expand-btn:hover,
-html[data-theme="test"] button.share-btn:hover {
-  background: color-mix(in srgb, #d2cde7 85%, white) !important;
+html[data-theme="test"] .popup-text button.expand-btn:hover,
+html[data-theme="test"] .popup-text button.share-btn:hover {
+  background: color-mix(in srgb, #d2cde7 85%, white);
 }
 
 /* Test2 theme (copy of neon) */
@@ -325,14 +325,14 @@ html[data-theme="test2"]{ --date-icon-filter: invert(1) brightness(1.1); }
 html[data-theme="test2"] .sidebar-footer {
   background: rgba(18,20,28,1); /* Непрозрачный вариант surface-1 для test2 */
 }
-html[data-theme="test2"] button.expand-btn,
-html[data-theme="test2"] button.share-btn {
-  background: #2B2A29 !important;
-  color: var(--text-0) !important;
+html[data-theme="test2"] .popup-text button.expand-btn,
+html[data-theme="test2"] .popup-text button.share-btn {
+  background: #2B2A29;
+  color: var(--text-0);
 }
-html[data-theme="test2"] button.expand-btn:hover,
-html[data-theme="test2"] button.share-btn:hover {
-  background: color-mix(in srgb, #2B2A29 85%, #0a0b0f) !important;
+html[data-theme="test2"] .popup-text button.expand-btn:hover,
+html[data-theme="test2"] .popup-text button.share-btn:hover {
+  background: color-mix(in srgb, #2B2A29 85%, #0a0b0f);
 }
 html[data-theme="test2"] input[type="date"] {
   background: #2B2A29;
@@ -928,7 +928,7 @@ input[type="date"]::-moz-date-input {
 #search-clear.is-visible { display: inline-flex; }
 
 /* Скрываем пользовательский крестик */
-#search-clear { display: none !important; }
+#search-clear { display: none; }
 
 #search-panel {
   position: fixed;
