@@ -45,6 +45,12 @@ class SearchManager {
     this.searchClear = document.getElementById(SELECTORS.searchClear);
     this.searchHandle = this.searchPanel?.querySelector('.search-panel__handle');
     this.bottomBar = document.getElementById(SELECTORS.bottomBar);
+
+    console.log('Search elements cached:', {
+      searchInput: this.searchInput,
+      searchPanel: this.searchPanel,
+      searchResults: this.searchResults
+    });
   }
 
   /**
@@ -52,11 +58,15 @@ class SearchManager {
    * @private
    */
   _setupEventListeners() {
+    // Update bottom bar offset on resize
+    this._updateBottomBarOffset();
+    window.addEventListener('resize', () => this._updateBottomBarOffset());
+
     if (this.searchInput) {
       this.searchInput.addEventListener('focus', () => this.openPanel());
-      this.searchInput.addEventListener('input', debounce((event) => {
+      this.searchInput.addEventListener('input', (event) => {
         this._handleInput(event.target.value);
-      }, DURATIONS.debounce));
+      });
       this.searchInput.addEventListener('keydown', (event) => this._handleKeydown(event));
     }
 
@@ -172,6 +182,19 @@ class SearchManager {
   }
 
   /**
+   * Update bottom bar offset for search panel positioning
+   * @private
+   */
+  _updateBottomBarOffset() {
+    if (!this.bottomBar) {
+      document.documentElement.style.setProperty('--search-panel-offset', '0px');
+      return;
+    }
+    const offset = this.bottomBar.offsetHeight;
+    document.documentElement.style.setProperty('--search-panel-offset', `${offset}px`);
+  }
+
+  /**
    * Toggle clear button visibility
    * @param {string} query - Current query
    * @private
@@ -227,7 +250,7 @@ class SearchManager {
       }
     } else {
       // Search with transliteration
-      const searchVariants = generateTransliterations(query);
+      const searchVariants = Array.from(generateTransliterations(query));
 
       matches = this.allEvents.filter(event => {
         const eventText = `${event.title} ${event.location}`.toLowerCase();

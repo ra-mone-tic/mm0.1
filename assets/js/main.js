@@ -4,7 +4,7 @@
  */
 
 import { JSON_URL, SELECTORS, DEVICE_TODAY } from './constants.js';
-import { makeEventId } from './utils.js';
+import { makeEventId, extractTimeFromText, getTimeAgoText, loadGeocodeCache, updateEventCoordinates } from './utils.js';
 import { mapManager } from './map.js';
 import { eventListManager } from './event-list.js';
 import { searchManager } from './search.js';
@@ -15,6 +15,8 @@ import { calendarManager } from './calendar.js';
  */
 const appState = {
   allEvents: [],
+  upcomingEvents: [],
+  archiveEvents: [],
   isInitialized: false
 };
 
@@ -66,6 +68,10 @@ async function initModules() {
 async function loadEvents() {
   try {
     console.log('Loading events...');
+
+    // Load geocode cache first
+    await loadGeocodeCache();
+
     const response = await fetch(JSON_URL);
 
     if (!response.ok) {
@@ -85,14 +91,48 @@ async function loadEvents() {
       dateLabel: getEventDateLabel(event.date, event.text)
     }));
 
-    console.log(`Loaded ${appState.allEvents.length} events`);
+    // Update coordinates from cache
+    appState.allEvents.forEach(event => updateEventCoordinates(event));
+
+    // Split events into upcoming and archive
+    appState.upcomingEvents = appState.allEvents.filter(event => {
+      if (event.date > DEVICE_TODAY) return true; // Future dates - always upcoming
+      if (event.date < DEVICE_TODAY) return false; // Past dates - always archive
+
+      // For today's events, check time
+      if (!event.text) return true; // No text - upcoming
+
+      const timeInfo = extractTimeFromText(event.text);
+      if (!timeInfo || !timeInfo.hasEndTime) return true; // No end time - upcoming
+
+      // Check if event has ended
+      const timeAgoText = getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
+      return !timeAgoText; // If has "ended" text, archive, else upcoming
+    });
+
+    appState.archiveEvents = appState.allEvents.filter(event => {
+      if (event.date > DEVICE_TODAY) return false; // Future dates - not archive
+      if (event.date < DEVICE_TODAY) return true; // Past dates - always archive
+
+      // For today's events, check time
+      if (!event.text) return false; // No text - not archive
+
+      const timeInfo = extractTimeFromText(event.text);
+      if (!timeInfo || !timeInfo.hasEndTime) return false; // No end time - not archive
+
+      // Check if event has ended
+      const timeAgoText = getTimeAgoText(event.date, timeInfo.end, timeInfo.start);
+      return !!timeAgoText; // If has "ended" text, archive
+    });
+
+    console.log(`Loaded ${appState.allEvents.length} events (${appState.upcomingEvents.length} upcoming, ${appState.archiveEvents.length} archive)`);
 
     // Update modules with events data
-    eventListManager.setEvents(appState.allEvents);
-    searchManager.setEvents(appState.allEvents);
+    eventListManager.setEvents(appState.allEvents, appState.upcomingEvents, appState.archiveEvents);
+    searchManager.setEvents(appState.upcomingEvents); // Search shows only upcoming
 
-    // Render initial map view
-    mapManager.renderDay(DEVICE_TODAY);
+    // Render initial map view with today's events
+    handleDateChange(DEVICE_TODAY);
 
   } catch (error) {
     console.error('Failed to load events:', error);
@@ -114,7 +154,7 @@ function setupEventCommunication() {
   // Sidebar opening (close popups)
   document.addEventListener('sidebar:opening', () => {
     // Close map popups when sidebar opens
-    mapManager.clearMarkers();
+    // Note: Markers are kept to avoid disappearing on interface clicks
   });
 
   // Date changes from calendar
@@ -134,14 +174,21 @@ function setupEventCommunication() {
  * Handle event selection from list or search
  */
 function handleEventSelection(eventData) {
+  // Close any open popups
+  mapManager.closeAllPopups();
+
+  // Show markers for the event's date
+  handleDateChange(eventData.date);
+
   // Ensure correct list view
   eventListManager.ensureListForEvent(eventData);
 
   // Highlight in list
   eventListManager.highlightEvent(eventData.id);
 
-  // Center map and show popup
+  // Center map and open popup
   mapManager.flyTo(eventData.lon, eventData.lat);
+  mapManager.openPopup(eventData.id);
 
   // Close search panel
   searchManager.closePanel();
@@ -308,7 +355,8 @@ function showWelcomePage1() {
 <p>Привет! Это <img src="${theme === 'neon' || theme === 'test2' ? 'assets/logo1.png' : 'assets/Vector.png'}" class="inline-logo" alt="MEOW"/> Афиша, и здесь мы рассказываем о мероприятиях Калининграда - культурных, познавательных, развлекательных и неочень.</p>
 <div class="welcome-buttons">
 <button class="welcome-btn" onclick="showWelcomePage2()">Расскажи подробнее о проекте</button>
-<button class="welcome-btn" onclick="closeWelcomeModal()">Давай движаемся!</button>
+<button class="welcome-btn" onclick="">Как здесь всё устроено?</button>
+<button class="welcome-btn" onclick="closeWelcomeModal()">Давай движа!</button>
 </div>`;
     content.innerHTML = html;
 
@@ -388,6 +436,7 @@ async function copyShareLink(eventId) {
     // Show success toast
     if (toast) {
       toast.textContent = 'Ссылка скопирована';
+      toast.hidden = false;
       toast.classList.add('is-visible');
       setTimeout(() => {
         toast.classList.remove('is-visible');

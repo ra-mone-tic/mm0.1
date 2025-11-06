@@ -239,12 +239,28 @@ class MapManager {
   }
 
   /**
+   * Close all open popups
+   */
+  closeAllPopups() {
+    this.markers.forEach(marker => {
+      const popup = marker.getPopup();
+      if (popup && popup.isOpen()) {
+        marker.togglePopup();
+      }
+    });
+  }
+
+  /**
    * Add marker for event
    * @param {Object} event - Event data
    * @param {Function} onShare - Share callback
    */
   addMarker(event, onShare) {
-    const popup = new maplibregl.Popup({ offset: 24, closeButton: false })
+    const popup = new maplibregl.Popup({
+      offset: 24,
+      closeButton: false,
+      className: 'animated-popup'
+    })
       .setHTML(this._createPopupContent(event, onShare));
 
     const marker = new maplibregl.Marker({ color: '#22d3ee' })
@@ -323,7 +339,7 @@ class MapManager {
     >Узнать больше</button>` : '';
 
     return `
-      <div style="font-family:var(--font-ui);padding-bottom:60px;">
+      <div class="popup-content" style="font-family:var(--font-ui);padding-bottom:60px;">
         <div><strong>${event.title}</strong></div>
         <div style="color:var(--text-1);">${event.location}</div>
         <div style="color:var(--text-1);">${event.dateLabel}</div>
@@ -362,14 +378,22 @@ class MapManager {
       const popupEl = popup.getElement();
       if (!popupEl) return;
 
-      // Reset state
-      const mainText = popupEl.querySelector('.popup-text');
-      const fullText = popupEl.querySelector('.popup-text-full');
-      if (mainText && fullText) {
-        mainText.style.display = 'block';
-        fullText.style.display = 'none';
-        expanded = false;
+      // Animate close
+      const content = popupEl.querySelector('.popup-content');
+      if (content) {
+        content.style.opacity = '0';
       }
+
+      // Reset state after animation
+      setTimeout(() => {
+        const mainText = popupEl.querySelector('.popup-text');
+        const fullText = popupEl.querySelector('.popup-text-full');
+        if (mainText && fullText) {
+          mainText.style.display = 'block';
+          fullText.style.display = 'none';
+          expanded = false;
+        }
+      }, 300);
     });
   }
 
@@ -381,19 +405,17 @@ class MapManager {
   _togglePopupText(popupEl) {
     const mainText = popupEl.querySelector('.popup-text');
     const fullText = popupEl.querySelector('.popup-text-full');
-    const buttonContainer = popupEl.querySelector('div:nth-child(4)');
 
     if (!mainText || !fullText) return;
 
-    if (expanded) {
+    const isExpanded = fullText.style.display === 'block';
+
+    if (isExpanded) {
       mainText.style.display = 'block';
       fullText.style.display = 'none';
-      expanded = false;
-      if (buttonContainer) buttonContainer.style.bottom = '6px';
     } else {
       mainText.style.display = 'none';
       fullText.style.display = 'block';
-      expanded = true;
     }
   }
 
@@ -427,6 +449,17 @@ class MapManager {
   flyTo(lon, lat, zoom = 14) {
     if (this.map) {
       this.map.flyTo({ center: [lon, lat], zoom });
+    }
+  }
+
+  /**
+   * Open popup for event
+   * @param {string} eventId - Event ID
+   */
+  openPopup(eventId) {
+    const marker = this.markerById.get(eventId);
+    if (marker) {
+      marker.togglePopup();
     }
   }
 

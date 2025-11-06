@@ -20,6 +20,83 @@ export function debounce(fn, delay) {
 }
 
 /**
+ * Geocode cache for coordinates
+ */
+let geocodeCache = {};
+let cacheLoaded = false;
+
+/**
+ * Load geocode cache from JSON
+ * @returns {Promise<Object>} Cache object
+ */
+export async function loadGeocodeCache() {
+  if (cacheLoaded) return geocodeCache;
+
+  try {
+    const response = await fetch('/geocode_cache.json');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    geocodeCache = await response.json();
+    cacheLoaded = true;
+    console.log(`Geocode cache loaded: ${Object.keys(geocodeCache).length} addresses`);
+    return geocodeCache;
+  } catch (error) {
+    console.error('Failed to load geocode cache:', error);
+    geocodeCache = {};
+    cacheLoaded = true;
+    return {};
+  }
+}
+
+/**
+ * Get coordinates from cache
+ * @param {string} location - Location string
+ * @returns {Array|null} [lat, lon] or null
+ */
+export function getCoordinatesFromCache(location) {
+  if (!cacheLoaded || !location) return null;
+
+  const normalizedLocation = location.trim();
+
+  // Exact match
+  if (geocodeCache[normalizedLocation]) {
+    return geocodeCache[normalizedLocation];
+  }
+
+  // Partial match
+  for (const [cachedLocation, coordinates] of Object.entries(geocodeCache)) {
+    if (normalizedLocation.includes(cachedLocation) || cachedLocation.includes(normalizedLocation)) {
+      return coordinates;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Update event coordinates from cache if missing
+ * @param {Object} event - Event object
+ * @returns {Object} Updated event
+ */
+export function updateEventCoordinates(event) {
+  if (event.lat && event.lon) {
+    return event;
+  }
+
+  const coordinates = getCoordinatesFromCache(event.location);
+  if (coordinates) {
+    event.lat = coordinates[0];
+    event.lon = coordinates[1];
+    console.log(`Found coordinates for "${event.location}": [${coordinates[0]}, ${coordinates[1]}]`);
+  } else {
+    console.warn(`Coordinates not found for "${event.location}"`);
+  }
+
+  return event;
+}
+
+/**
  * Format location string by removing city duplicates
  * @param {string} location - Location string
  * @returns {string} Formatted location

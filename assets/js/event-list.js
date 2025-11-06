@@ -113,11 +113,22 @@ class EventListManager {
 
   /**
    * Set events data
-   * @param {Array} events - All events array
+   * @param {Array} allEvents - All events array
+   * @param {Array} upcomingEvents - Upcoming events array
+   * @param {Array} archiveEvents - Archive events array
    */
-  setEvents(events) {
-    this.allEvents = events;
-    this._categorizeEvents();
+  setEvents(allEvents, upcomingEvents = null, archiveEvents = null) {
+    this.allEvents = allEvents;
+
+    if (upcomingEvents && archiveEvents) {
+      // Use provided categorization
+      this.upcomingEvents = upcomingEvents;
+      this.archiveEvents = archiveEvents;
+    } else {
+      // Fallback to self-categorization
+      this._categorizeEvents();
+    }
+
     this._updateArchiveButtonLabel();
     this.renderList();
   }

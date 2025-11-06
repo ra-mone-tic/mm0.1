@@ -497,6 +497,22 @@
       }
       #sidebar hr { margin-top: 25px; }
     }
+
+    /* MapLibre markers and popups z-index */
+    .maplibregl-marker { z-index: 100 !important; }
+    .maplibregl-popup { z-index: 200 !important; }
+    .maplibregl-popup-content { z-index: 200 !important; }
+
+    /* Animated popup */
+    .animated-popup .maplibregl-popup-content {
+      opacity: 1;
+      animation: popupFadeIn 0.3s ease-in;
+    }
+
+    @keyframes popupFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
     /* Переопределение фона футера сайдбара для всех тем */
     .sidebar-footer {
       position: absolute;
@@ -521,11 +537,11 @@
     #copy-toast {
       position: fixed;
       left: 16px;
-      bottom: calc(56px + 24px + env(safe-area-inset-bottom)); /* 24px — небольшой отступ */
+      bottom: calc(90px + 24px + env(safe-area-inset-bottom)); /* Выше футера */
       transform: translate(0, 16px);
       background: var(--surface-1);
       border: var(--border);
-      border-radius: var(--radius-sm);
+      border-radius: 9999px;
       padding: 8px 14px;
       font-size: var(--font-size-base);
       color: var(--text-0);
