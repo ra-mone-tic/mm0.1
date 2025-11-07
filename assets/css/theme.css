@@ -307,6 +307,12 @@ html[data-theme="test"] .popup-text button.share-btn:hover {
   background: color-mix(in srgb, #d2cde7 85%, white);
 }
 
+html[data-theme="test"] #bottomBar {
+  background: transparent;
+  border-top: none;
+  box-shadow: none;
+}
+
 /* Test2 theme (copy of neon) */
 html[data-theme="test2"]{
   --surface-0:#0a0b0f; --surface-1:rgba(18,20,28,.68); --surface-2:rgba(36,40,58,.6);
@@ -344,6 +350,12 @@ html[data-theme="test2"] .welcome-btn {
 }
 html[data-theme="test2"] .welcome-btn:hover {
   background: color-mix(in srgb, #2B2A29 85%, #0a0b0f);
+}
+
+html[data-theme="test2"] #bottomBar {
+  background: transparent;
+  border-top: none;
+  box-shadow: none;
 }
 
 /* 6) Calendar Dropdown */
@@ -839,7 +851,7 @@ input[type="date"]::-moz-date-input {
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 900;
+  z-index: 960;
   background: var(--surface-1);
   border-top: var(--border);
   box-shadow: 0 -12px 30px rgba(15, 18, 36, 0.1);
@@ -923,17 +935,17 @@ input[type="date"]::-moz-date-input {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--search-panel-offset);
+  bottom: 0;
+  height: min(70dvh, 520px);
   background: var(--surface-1);
   border-top: var(--border);
-  box-shadow: 0 -18px 38px rgba(15, 18, 36, 0.18);
   border-top-left-radius: var(--radius-md);
   border-top-right-radius: var(--radius-md);
+  box-shadow: 0 -18px 38px rgba(15, 18, 36, 0.18);
   padding: 12px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: min(70dvh, 520px);
   transform: translateY(calc(100% + 32px));
   opacity: 0;
   pointer-events: none;
@@ -970,7 +982,7 @@ input[type="date"]::-moz-date-input {
   padding: 0;
   list-style: none;
   overflow-y: auto;
-  flex: 1;
+  max-height: calc(min(70dvh, 520px) - 90px);
   display: flex;
   flex-direction: column;
   gap: 6px;
