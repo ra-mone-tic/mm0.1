@@ -158,6 +158,11 @@ function setupEventCommunication() {
       const dateStr = e.target.value;
       handleDateChange(dateStr);
     });
+
+    // Prevent text selection highlight on click
+    dateInput.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+    });
   }
 
   // Search results interaction

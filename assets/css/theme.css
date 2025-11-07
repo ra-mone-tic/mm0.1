@@ -94,11 +94,6 @@ input[type="date"]{
 input[type="date"]:hover{
   background: color-mix(in srgb, #d2cde7 90%, transparent);
 }
-input[type="date"]:focus{
-  outline:3px solid color-mix(in srgb, var(--brand) 55%, transparent);
-  outline-offset:2px;
-  background: color-mix(in srgb, #d2cde7 90%, transparent);
-}
 input[type="date"]::-webkit-calendar-picker-indicator{
   display: none;
   opacity: 0;
@@ -676,12 +671,6 @@ input[type="date"] {
 }
 
 input[type="date"]:hover {
-  background: color-mix(in srgb, #d2cde7 90%, transparent);
-}
-
-input[type="date"]:focus {
-  outline:3px solid color-mix(in srgb, var(--brand) 55%, transparent);
-  outline-offset:2px;
   background: color-mix(in srgb, #d2cde7 90%, transparent);
 }
 
