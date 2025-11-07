@@ -21,16 +21,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Проверить секреты
-        run: |
-          test -n "$VK_TOKEN" || (echo "❌ VK_TOKEN обязателен" && exit 1)
-          if test -n "$YANDEX_KEY"; then
-            echo "✅ Yandex геокодинг доступен (высокая точность)"
-          else
-            echo "⚠️  Yandex геокодинг недоступен (будет работать с ArcGIS + Nominatim)"
-          fi
-          echo "✅ Основные секреты проверены"
-
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
