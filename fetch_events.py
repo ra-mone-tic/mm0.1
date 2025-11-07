@@ -44,7 +44,7 @@ if not logger.handlers:
 # ─────────── НАСТРОЙКА ───────────
 TOKEN = os.getenv("VK_TOKEN")  # Обязательный секрет VK
 DOMAIN = os.getenv("VK_DOMAIN", "meowafisha")
-MAX_POSTS = int(os.getenv("VK_MAX_POSTS", "2000"))
+MAX_POSTS = int(os.getenv("VK_MAX_POSTS", "50"))
 BATCH = 100
 WAIT_REQ = float(os.getenv("VK_WAIT_REQ", "1.1"))  # пауза между wall.get (~1 rps)
 YEAR_DEFAULT = os.getenv("YEAR_DEFAULT", "2025")
@@ -276,6 +276,21 @@ def main():
     try:
         logger.info("Запуск обработки событий...")
 
+        # Загрузить существующие события
+        existing_events = []
+        if OUTPUT_JSON.exists():
+            try:
+                existing_events = json.loads(OUTPUT_JSON.read_text(encoding='utf-8'))
+                logger.info(f"Загружено {len(existing_events)} существующих событий")
+            except Exception as e:
+                logger.warning(f"Не удалось загрузить существующие события: {e}")
+
+        # Создать set ключей для проверки дубликатов
+        existing_keys = set()
+        for event in existing_events:
+            key = f"{event['date']}|{event['title']}|{event['location']}"
+            existing_keys.add(key)
+
         # Загрузить кэш
         global geocache, original_cache, geolog
         geocache = load_cache()
@@ -297,7 +312,13 @@ def main():
                     text = item.get("text") or ""
                     event = extract(text)
                     if event:
-                        records.append(event)
+                        # Проверить, новое ли событие
+                        event_key = f"{event['date']}|{event['title']}|{event['location']}"
+                        if event_key not in existing_keys:
+                            records.append(event)
+                            existing_keys.add(event_key)  # Добавить в set чтобы не дублировать в рамках одного запуска
+                        else:
+                            logger.debug(f"Событие уже существует: {event['title']}")
 
                 offset += BATCH
 
@@ -344,12 +365,20 @@ def main():
 
         # Фильтровать события без координат
         df = df.dropna(subset=["lat", "lon"])
-        logger.info(f"Финальный датасет: {len(df)} событий с координатами")
+        logger.info(f"Финальный датасет: {len(df)} новых событий с координатами")
+
+        # Объединить с существующими событиями
+        new_events = df[["title", "date", "location", "lat", "lon", "text"]].to_dict('records')
+        all_events = existing_events + new_events
+
+        # Сортировать по дате
+        all_events.sort(key=lambda x: x['date'])
+
+        logger.info(f"Общий датасет: {len(all_events)} событий ({len(existing_events)} существующих + {len(new_events)} новых)")
 
         # Сохранить результат
-        output_data = df[["title", "date", "location", "lat", "lon", "text"]].sort_values("date")
         OUTPUT_JSON.write_text(
-            output_data.to_json(orient="records", force_ascii=False, indent=2),
+            json.dumps(all_events, ensure_ascii=False, indent=2),
             encoding="utf-8"
         )
 
