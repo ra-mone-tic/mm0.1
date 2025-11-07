@@ -358,6 +358,22 @@ html[data-theme="test2"] #bottomBar {
   box-shadow: none;
 }
 
+html[data-theme="test"] #controls {
+  background: rgba(210, 205, 231, 0.5);
+}
+
+html[data-theme="test2"] #controls {
+  background: rgba(18, 20, 28, 0.5);
+}
+
+html[data-theme="test"] #map {
+  background: transparent;
+}
+
+html[data-theme="test2"] #map {
+  background: transparent;
+}
+
 /* 6) Calendar Dropdown */
 .calendar-modal {
   position: absolute;
@@ -627,14 +643,18 @@ body {
   padding-right: calc(12px + env(safe-area-inset-right));
   background: var(--surface-1);
   border-bottom: var(--border);
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
   height: 90px; /* 29px + padding */
   min-height: 90px;
   max-height: 90px;
   box-sizing: border-box;
 }
 
-#layout { flex: 1; display: flex; }
+#layout { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; }
 #map { flex: 1; width: 100%; height: 100%; }
 
 .date-input-container {
@@ -1122,6 +1142,9 @@ input[type="date"]::-moz-date-input {
 .maplibregl-marker { z-index: 100 !important; }
 .maplibregl-popup { z-index: 200 !important; }
 .maplibregl-popup-content { z-index: 200 !important; }
+
+/* Adjust MapLibre controls position */
+.maplibregl-ctrl-top-right { top: 100px !important; }
 
 /* Animated popup */
 .animated-popup .maplibregl-popup-content {
