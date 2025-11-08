@@ -915,7 +915,7 @@ input[type="date"]::-moz-date-input {
   position: relative;
   z-index: 1300;
   background: var(--surface-1);
-  padding: 8px;
+  padding: 0;
   border-radius:50%;
   transition: background var(--fx-fast);
   min-height: var(--control-height);
@@ -937,7 +937,7 @@ input[type="date"]::-moz-date-input {
   position: relative;
   z-index: 1300;
   background: var(--surface-1);
-  padding: 8px;
+  padding: 0;
   border-radius:50%;
   transition: background var(--fx-fast);
   min-height: var(--control-height);
