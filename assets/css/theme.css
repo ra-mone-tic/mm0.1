@@ -921,6 +921,18 @@ input[type="date"]::-moz-date-input {
 #help:hover, #burger:hover { background: var(--surface-2); }
 #help:focus-visible, #burger:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 55%, transparent); outline-offset: 2px; }
 
+/* Make help and burger buttons opaque for all themes */
+#help, #burger {
+  background: #d2cde7 !important; /* Solid light background for all themes */
+}
+
+html[data-theme="neon"] #help,
+html[data-theme="neon"] #burger,
+html[data-theme="test2"] #help,
+html[data-theme="test2"] #burger {
+  background: #2B2A29 !important; /* Solid dark background for dark themes */
+}
+
 .header-buttons { display: flex; gap: 8px; margin-left: auto; }
 
 #help {
