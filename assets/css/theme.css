@@ -933,6 +933,16 @@ html[data-theme="test2"] #burger {
   background: #2B2A29 !important; /* Solid dark background for dark themes */
 }
 
+/* Make archive button opaque for all themes */
+#toggleArchive {
+  background: #d2cde7 !important; /* Solid light background for all themes */
+}
+
+html[data-theme="neon"] #toggleArchive,
+html[data-theme="test2"] #toggleArchive {
+  background: #2B2A29 !important; /* Solid dark background for dark themes */
+}
+
 .header-buttons { display: flex; gap: 8px; margin-left: auto; }
 
 #help {
