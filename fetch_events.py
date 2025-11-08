@@ -236,17 +236,39 @@ def extract(text: str):
     if not text:
         return None
 
-    # Паттерн даты ДД.ММ
-    date_match = re.search(r"\b(\d{2})\.(\d{2})\b", text)
-    # Местоположение после 📍
-    loc_match = re.search(r"📍\s*(.+)", text)
+    # Попробовать разные паттерны даты
+    date_patterns = [
+        r"\b(\d{2})\.(\d{2})\b",  # DD.MM
+        r"\b(\d{2})/(\d{2})\b",   # DD/MM
+        r"\b(\d{1,2})\.(\d{1,2})\b",  # D.M или DD.MM
+    ]
+
+    date_match = None
+    for pattern in date_patterns:
+        date_match = re.search(pattern, text)
+        if date_match:
+            break
+
+    # Попробовать разные маркеры местоположения
+    loc_patterns = [
+        r"📍\s*(.+)",      # 📍
+        r"📍\s*([^📍\n]+)", # 📍 до следующего эмодзи или новой строки
+        r"место[:\s]*(.+)", # "место:"
+        r"адрес[:\s]*(.+)", # "адрес:"
+    ]
+
+    loc_match = None
+    for pattern in loc_patterns:
+        loc_match = re.search(pattern, text, re.I)
+        if loc_match:
+            break
 
     if not (date_match and loc_match):
+        logger.debug(f"No date or location found in post: {text[:100]}...")
         return None
 
-    date = f"{YEAR_DEFAULT}-{date_match.group(2)}-{date_match.group(1)}"
-    loc = loc_match.group(1).split('➡️')[0].strip()
-
+    date = f"{YEAR_DEFAULT}-{date_match.group(2).zfill(2)}-{date_match.group(1).zfill(2)}"
+    loc = loc_match.group(1).split('➡️')[0].split('\n')[0].strip()
 
     # Добавить город если отсутствует
     if not re.search(CITY_WORDS, loc, re.I):
@@ -256,9 +278,13 @@ def extract(text: str):
     lines = text.split('\n')
     title = ""
     for line in lines:
-        if re.search(r"\b\d{2}\.\d{2}\b", line):
-            title = re.sub(r"^\s*\d{2}\.\d{2}\s*\|\s*", "", line).strip()
+        if re.search(r"\b\d{1,2}[./]\d{1,2}\b", line):
+            title = re.sub(r"^\s*\d{1,2}[./]\d{1,2}\s*\|\s*", "", line).strip()
             break
+
+    # Если заголовок пустой, взять первую строку
+    if not title:
+        title = lines[0].strip() if lines else "Событие"
 
     return {
         'title': title,
@@ -269,6 +295,8 @@ def extract(text: str):
 
 def main():
     """Основной обработчик с полной обработкой ошибок."""
+    logger.info(f"VK_TOKEN present: {bool(TOKEN)}")
+    logger.info(f"DOMAIN: {DOMAIN}")
     if not TOKEN:
         logger.critical("VK_TOKEN не задан (секрет репозитория или .env требуется)")
         sys.exit(1)
@@ -310,6 +338,7 @@ def main():
 
                 for item in items:
                     text = item.get("text") or ""
+                    logger.debug(f"Processing post: {text[:200]}...")
                     event = extract(text)
                     if event:
                         # Проверить, новое ли событие
@@ -332,8 +361,8 @@ def main():
         logger.info(f"Извлечено {len(records)} событий")
 
         if not records:
-            logger.warning("События не найдены")
-            OUTPUT_JSON.write_text("[]", encoding="utf-8")
+            logger.warning("Новые события не найдены, сохраняем существующие")
+            # Не перезаписываем файл, оставляем существующие события
             return
 
         # Дедупликация и сортировка
