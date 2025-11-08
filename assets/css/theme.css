@@ -22,7 +22,7 @@
 
 /* 1) Base tokens */
 :root{
-  --control-height: 44px;  /* Unified height for control elements (logo, buttons, date input) */
+  --control-height: 61px;  /* Unified height for control elements (logo, buttons, date input) */
   --surface-0:#fff;        /* page background */
   --surface-1:#f7f7f9;     /* panels/cards */
   --surface-2:#eceef1;     /* hover/bg subtle */
@@ -57,20 +57,24 @@
   --body-line-height: 150%;
   --caption-size: 12px;
   --caption-line-height: 140%;
+  --date-font-size: 24px;
 }
 
 /* Tablet (1024px) */
 @media (max-width: 1024px) {
   :root {
+    --control-height: 55px;
     --grid-columns: 8;
     --grid-gutter: 16px;
     --grid-margin: 32px;
+    --date-font-size: 20px;
   }
 }
 
 /* Mobile (375px) */
 @media (max-width: 375px) {
   :root {
+    --control-height: 44px;
     --grid-columns: 4;
     --grid-gutter: 16px;
     --grid-margin: 16px;
@@ -79,6 +83,7 @@
     --h3-size: 20px;
     --body-size: 14px;
     --caption-size: 11px;
+    --date-font-size: 16px;
   }
 }
 
@@ -145,7 +150,7 @@ input[type="date"]{
   accent-color: var(--brand);
   color-scheme: light; /* светлый календарь по умолчанию */
   font-family:var(--font-ui);
-  font-size:16px;
+  font-size: var(--date-font-size);
   cursor:pointer;
   transition: all var(--fx-fast);
   box-shadow: var(--shadow-sm);
@@ -361,7 +366,7 @@ html[data-theme="neon"] .calendar__day--other-month {
   left: 0;
   right: 0;
   background: var(--surface-1);
-  height: 89px;
+  height: 108px;
   z-index: 1100;
 }
 .sidebar-header h3 {
@@ -370,7 +375,7 @@ html[data-theme="neon"] .calendar__day--other-month {
   top: 31px;
   margin: 0;
 }
-#sidebar #upcoming { margin-top: 0px; }
+#sidebar #upcoming { margin-top: 19px; }
 html[data-theme="minimal"] .sidebar-header { background: #d2cde7; }
 html[data-theme="neon"] .sidebar-header { background: rgba(18,20,28,1); }
 html[data-theme="test"] .sidebar-header { background: #d2cde7; }
@@ -750,9 +755,9 @@ body {
   left: 0;
   right: 0;
   z-index: 2;
-  height: 90px; /* 29px + padding */
-  min-height: 90px;
-  max-height: 90px;
+  height: 109px; /* 29px + padding */
+  min-height: 109px;
+  max-height: 109px;
   box-sizing: border-box;
 }
 
@@ -763,7 +768,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 0 0 160px;
+  flex: 0 0 284px;
   margin-left: 0;
   margin-right: 0;
   padding-left: 0;
@@ -784,11 +789,11 @@ input[type="date"] {
   color:var(--text-0);
   border:none;
   border-radius:9999px;
-  padding:.5rem .75rem;
+  padding: 0 .75rem;
   accent-color: var(--brand);
   color-scheme: light;
   font-family:var(--font-ui);
-  font-size:18px;
+  font-size: var(--date-font-size);
   font-weight:600;
   cursor:pointer;
   transition: all var(--fx-fast);
@@ -918,7 +923,7 @@ input[type="date"]::-moz-date-input {
   position: fixed;
   right: 0;
   top: 0;
-  bottom: 90px;
+  bottom: 109px;
   width: 320px;
   background: var(--surface-1);
   border-left: var(--border);
@@ -936,8 +941,8 @@ input[type="date"]::-moz-date-input {
 
 .sidebar-content {
   position: relative;
-  top: 89px;
-  height: calc(100% - 89px);
+  top: 108px;
+  height: calc(100% - 108px);
   overflow-y: auto;
   padding-top: 1px;
   padding-left: 12px;
@@ -1164,7 +1169,7 @@ input[type="date"]::-moz-date-input {
     justify-content: space-between;
   }
   .date-input-container { flex: 1; max-width: 120px; min-width: 70px; }
-  input[type="date"] { font-size: 12px; min-width: auto; width: 100%; }
+  input[type="date"] { font-size: var(--date-font-size); min-width: auto; width: 100%; }
   .date-input-container label { font-size: 9px; }
   #help { padding: 4px; }
   #burger { padding: 4px; }
@@ -1247,7 +1252,7 @@ input[type="date"]::-moz-date-input {
 #copy-toast {
   position: fixed;
   left: 16px;
-  bottom: calc(90px + 24px + env(safe-area-inset-bottom)); /* Выше футера */
+  bottom: calc(109px + 24px + env(safe-area-inset-bottom)); /* Выше футера */
   transform: translate(0, 16px);
   background: var(--surface-1);
   border: var(--border);
