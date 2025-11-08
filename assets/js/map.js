@@ -287,26 +287,6 @@ class MapManager {
       <button class="share-btn"
         type="button"
         onclick="window.copyShareLink('${event.id}')"
-        style="
-          position: absolute;
-          right: 8px;
-          bottom: 8px;
-          padding: 7px 11px;
-          background: #d2cde7;
-          color: black;
-          border: none;
-          border-radius: 9999px;
-          font-size: 12px;
-          font-weight: 500;
-          font-family: var(--font-ui);
-          cursor: pointer;
-          z-index: 11;
-          transition: background var(--fx-fast);
-          box-shadow: var(--shadow-sm);
-          outline: none;
-        "
-        onmouseover="this.style.background='color-mix(in srgb, #d2cde7 90%, black)'"
-        onmouseout="this.style.background='#d2cde7'"
       >Поделиться</button>`;
 
     let postText = event.text || '';
@@ -316,26 +296,6 @@ class MapManager {
     const isLong = postText.length > 90;
     const expandButton = isLong ? `<button class="expand-btn"
       type="button"
-      style="
-        position: absolute;
-        bottom: 8px;
-        left: 8px;
-        padding: 7px 11px;
-        background: #d2cde7;
-        color: black;
-        border: none;
-        border-radius: 9999px;
-        font-size: 12px;
-        font-weight: 500;
-        font-family: var(--font-ui);
-        cursor: pointer;
-        z-index: 11;
-        transition: background var(--fx-fast);
-        box-shadow: var(--shadow-sm);
-        outline: none;
-      "
-      onmouseover="this.style.background='color-mix(in srgb, #d2cde7 90%, black)'"
-      onmouseout="this.style.background='#d2cde7'"
     >Узнать больше</button>` : '';
 
     return `

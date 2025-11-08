@@ -286,9 +286,26 @@ html[data-theme="amoled"] input[type="date"]{
   line-height: 100%;
 }
 
-.popup-text button.expand-btn,
-.popup-text button.share-btn {
-  font-size: var(--caption-size) !important;
+.popup-content button.expand-btn,
+.popup-content button.share-btn {
+  padding: 7px 11px;
+  background: #d2cde7;
+  color: var(--text-0);
+  border: none;
+  border-radius: 9999px;
+  font-size: var(--caption-size);
+  font-weight: 500;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  z-index: 11;
+  transition: background var(--fx-fast);
+  box-shadow: var(--shadow-sm);
+  outline: none;
+}
+
+.popup-content button.expand-btn:hover,
+.popup-content button.share-btn:hover {
+  background: color-mix(in srgb, #d2cde7 90%, black);
 }
 
 /* 4) Scrollbar (webkit) */
@@ -323,23 +340,23 @@ html[data-theme="neon"] .btn-primary{
   box-shadow:0 0 0 1px rgba(255,255,255,.08) inset, 0 10px 30px rgba(0,0,0,.45);
 }
 /* neon popup buttons */
-html[data-theme="neon"] .popup-text button.expand-btn,
-html[data-theme="neon"] .popup-text button.share-btn {
+html[data-theme="neon"] .popup-content button.expand-btn,
+html[data-theme="neon"] .popup-content button.share-btn {
   background: #2B2A29;
   color: var(--text-0);
 }
-html[data-theme="neon"] .popup-text button.expand-btn:hover,
-html[data-theme="neon"] .popup-text button.share-btn:hover {
+html[data-theme="neon"] .popup-content button.expand-btn:hover,
+html[data-theme="neon"] .popup-content button.share-btn:hover {
   background: color-mix(in srgb, #2B2A29 85%, #0a0b0f);
 }
 
 /* minimal popup buttons */
-html[data-theme="minimal"] .popup-text button.expand-btn,
-html[data-theme="minimal"] .popup-text button.share-btn {
+html[data-theme="minimal"] .popup-content button.expand-btn,
+html[data-theme="minimal"] .popup-content button.share-btn {
   color: var(--text-0);
 }
-html[data-theme="minimal"] .popup-text button.expand-btn:hover,
-html[data-theme="minimal"] .popup-text button.share-btn:hover {
+html[data-theme="minimal"] .popup-content button.expand-btn:hover,
+html[data-theme="minimal"] .popup-content button.share-btn:hover {
   background: color-mix(in srgb, #d2cde7 85%, white);
 }
 
@@ -401,12 +418,12 @@ html[data-theme="test"]{
 html[data-theme="test"] .sidebar-footer {
   background: #f9c5ff; /* Непрозрачный вариант surface-1 для test */
 }
-html[data-theme="test"] .popup-text button.expand-btn,
-html[data-theme="test"] .popup-text button.share-btn {
+html[data-theme="test"] .popup-content button.expand-btn,
+html[data-theme="test"] .popup-content button.share-btn {
   color: var(--text-0);
 }
-html[data-theme="test"] .popup-text button.expand-btn:hover,
-html[data-theme="test"] .popup-text button.share-btn:hover {
+html[data-theme="test"] .popup-content button.expand-btn:hover,
+html[data-theme="test"] .popup-content button.share-btn:hover {
   background: color-mix(in srgb, #d2cde7 85%, white);
 }
 
@@ -449,13 +466,13 @@ html[data-theme="test2"]{ --date-icon-filter: invert(1) brightness(1.1); }
 html[data-theme="test2"] .sidebar-footer {
   background: rgba(18,20,28,1); /* Непрозрачный вариант surface-1 для test2 */
 }
-html[data-theme="test2"] .popup-text button.expand-btn,
-html[data-theme="test2"] .popup-text button.share-btn {
+html[data-theme="test2"] .popup-content button.expand-btn,
+html[data-theme="test2"] .popup-content button.share-btn {
   background: #2B2A29;
   color: var(--text-0);
 }
-html[data-theme="test2"] .popup-text button.expand-btn:hover,
-html[data-theme="test2"] .popup-text button.share-btn:hover {
+html[data-theme="test2"] .popup-content button.expand-btn:hover,
+html[data-theme="test2"] .popup-content button.share-btn:hover {
   background: color-mix(in srgb, #2B2A29 85%, #0a0b0f);
 }
 html[data-theme="test2"] input[type="date"] {
