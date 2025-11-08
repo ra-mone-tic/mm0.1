@@ -168,6 +168,10 @@ input[type="date"]::-moz-focus-inner {
   border: 0;
   padding: 0;
 }
+
+#logo:focus-visible {
+  outline: none;
+}
 /* Тёмные темы: тёмный системный календарь */
 html[data-theme="neon"] input[type="date"],
 html[data-theme="amoled"] input[type="date"]{
@@ -838,8 +842,6 @@ input[type="date"]::-moz-date-input {
   border-radius: var(--radius-xs);
   transition: background var(--fx-fast);
 }
-
-#logo:hover { background: var(--surface-2); }
 
 #help, #burger {
   width: var(--control-height);
