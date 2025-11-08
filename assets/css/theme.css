@@ -40,6 +40,46 @@
   --font-ui: 'NTSomic', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --date-icon-filter:none; /* фильтр для иконки календаря */
+
+  /* Grid and spacing (multiples of 8px) */
+  --grid-columns: 12;
+  --grid-gutter: 24px;
+  --grid-margin: 120px;
+
+  /* Typography */
+  --h1-size: 48px;
+  --h1-line-height: 120%;
+  --h2-size: 32px;
+  --h2-line-height: 120%;
+  --h3-size: 24px;
+  --h3-line-height: 130%;
+  --body-size: 16px;
+  --body-line-height: 150%;
+  --caption-size: 12px;
+  --caption-line-height: 140%;
+}
+
+/* Tablet (1024px) */
+@media (max-width: 1024px) {
+  :root {
+    --grid-columns: 8;
+    --grid-gutter: 16px;
+    --grid-margin: 32px;
+  }
+}
+
+/* Mobile (375px) */
+@media (max-width: 375px) {
+  :root {
+    --grid-columns: 4;
+    --grid-gutter: 16px;
+    --grid-margin: 16px;
+    --h1-size: 32px;
+    --h2-size: 24px;
+    --h3-size: 20px;
+    --body-size: 14px;
+    --caption-size: 11px;
+  }
 }
 
 /* 2) Baseline, buttons and focus rings (tokenized) */
@@ -47,7 +87,32 @@ html,body{height:100%;}
 body{
   background:var(--surface-0); color:var(--text-0);
   font-family:var(--font-ui);
+  font-size: var(--body-size);
+  line-height: var(--body-line-height);
   transition: background var(--fx-slow), color var(--fx-slow);
+}
+
+/* Typography */
+h1 {
+  font-size: var(--h1-size);
+  line-height: var(--h1-line-height);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size: var(--h2-size);
+  line-height: var(--h2-line-height);
+}
+
+h3 {
+  font-size: var(--h3-size);
+  line-height: var(--h3-line-height);
+}
+
+.caption {
+  font-size: var(--caption-size);
+  line-height: var(--caption-line-height);
 }
 
 .btn{
@@ -126,6 +191,8 @@ html[data-theme="amoled"] input[type="date"]{
   background:var(--surface-1); color:var(--text-0);
   border-radius:var(--radius-md); box-shadow:var(--shadow-md); border:var(--border);
   font-family:var(--font-ui);
+  font-size: var(--body-size);
+  line-height: var(--body-line-height);
 }
 .maplibregl-popup-tip{
   border-top-color:transparent !important;
@@ -172,11 +239,15 @@ html[data-theme="amoled"] input[type="date"]{
   word-break: break-word;
   overflow-wrap: break-word;
   word-wrap: break-word; /* fallback for old browsers */
+  font-size: var(--body-size);
+  line-height: var(--body-line-height);
 }
 .popup-text {
   word-break: break-word;
   overflow-wrap: break-word;
   word-wrap: break-word; /* fallback for old browsers */
+  font-size: var(--body-size);
+  line-height: var(--body-line-height);
 }
 .popup-text::-webkit-scrollbar-track,
 .popup-text-full::-webkit-scrollbar-track {
@@ -186,6 +257,29 @@ html[data-theme="amoled"] input[type="date"]{
 #sidebar::-webkit-scrollbar-track,
 #search-results::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Popup typography */
+.maplibregl-popup-content strong {
+  font-size: 18px;
+  line-height: var(--h3-line-height);
+  font-weight: 700;
+}
+
+.maplibregl-popup-content div[style*="color:var(--text-1)"] {
+  font-size: 10px;
+  line-height: 100%;
+}
+
+.popup-text,
+.popup-text-full {
+  font-size: 12px;
+  line-height: 100%;
+}
+
+.popup-text button.expand-btn,
+.popup-text button.share-btn {
+  font-size: var(--caption-size) !important;
 }
 
 /* 4) Scrollbar (webkit) */
@@ -1038,66 +1132,29 @@ input[type="date"]::-moz-date-input {
   background: var(--surface-2);
 }
 
-/* Медиа-запросы для мобильных устройств */
-@media (max-width: 768px) {
-  :root { --control-height: 44px; }
+/* Tablet (1024px) */
+@media (max-width: 1024px) {
+  :root { --control-height: 40px; }
   #layout { flex-direction: column; }
   #sidebar { width: 80%; max-width: 320px; }
-  #sidebar hr { margin-top: 45px; }
-  #bottomBar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
+  #sidebar hr { margin-top: 40px; }
+  #bottomBar { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
   .search-field { padding: 8px 12px; }
   #global-search { font-size: 15px; }
   .welcome-modal__content {
-    top: calc(90px + 2.5vw);
-    bottom: calc(90px + 2.5vw + 30px);
+    top: calc(90px + 10vw);
+    bottom: calc(90px + 10vw + 30px);
     height: auto;
-    max-height: calc(100vh - 180px - 5vw - 30px);
+    max-height: calc(100vh - 180px - 20vw - 30px);
   }
 }
 
-/* Планшеты и большие телефоны */
-@media (max-width: 640px) {
-  :root { --control-height: 40px; }
-  #controls {
-    gap: 6px;
-    padding: 10px 12px;
-  }
-  .date-input-container { flex: 0 0 140px; }
-  input[type="date"] { font-size: 14px; min-width: 140px; }
-  .date-input-container label { font-size: 11px; }
-  #burger { font-size: 20px; }
-  #sidebar hr { margin-top: 40px; }
-  .welcome-modal {
-    top: env(safe-area-inset-top);
-    left: env(safe-area-inset-left);
-    width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
-    height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
-    box-sizing: border-box;
-  }
-}
-
-/* Стандартные мобильные телефоны */
-@media (max-width: 480px) {
-  :root { --control-height: 36px; }
-  #controls {
-    gap: 2px;
-    padding: 6px 12px;
-    flex-wrap: nowrap;
-  }
-  .date-input-container { flex: 0 1 auto; min-width: 80px; max-width: 90px; margin-right: 20px; }
-  input[type="date"] { font-size: 12px; min-width: auto; width: 100%; }
-  .date-input-container label { font-size: 9px; }
-  #help { padding: 6px; }
-  #burger { padding: 6px; }
-  #sidebar hr { margin-top: 35px; }
-}
-
-/* Узкие экраны (iPhone SE, старые устройства) */
+/* Mobile (375px) */
 @media (max-width: 375px) {
   :root { --control-height: 32px; }
   #controls {
-    gap: 2px;
-    padding: 6px 12px;
+    gap: 4px;
+    padding: 8px 12px;
     justify-content: space-between;
   }
   .date-input-container { flex: 1; max-width: 120px; min-width: 70px; }
@@ -1106,36 +1163,36 @@ input[type="date"]::-moz-date-input {
   #help { padding: 4px; }
   #burger { padding: 4px; }
   #sidebar hr { margin-top: 30px; }
-}
-
-/* Критически узкие экраны */
-@media (max-width: 320px) {
-  :root { --control-height: 20px; }
-  #controls {
-    flex-direction: column;
-    align-items: stretch;
+  #bottomBar { padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+  .search-field { padding: 6px 10px; }
+  #global-search { font-size: 14px; }
+  .welcome-modal__content {
+    padding: 16px;
+    height: auto;
+    top: calc(90px + 10vw);
+    bottom: calc(90px + 10vw + 30px);
+    left: calc(10vw + env(safe-area-inset-left));
+    right: calc(10vw + env(safe-area-inset-right));
+    transform: none;
+    max-height: calc(100vh - 180px - 20vw - 30px);
+  }
+  .welcome-logo {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 8px;
+  }
+  .welcome-modal p {
+    font-size: 14px;
+    margin: 12px 0;
+  }
+  .welcome-buttons {
     gap: 4px;
   }
-  #logo {
-    align-self: center;
-    order: -1;
-  }
-  .date-input-container {
-    flex: 1;
-    align-self: stretch;
-  }
-  input[type="date"] {
+  .welcome-btn {
+    padding: 6px 10px;
     font-size: 12px;
-    min-width: unset;
+    margin: 2px;
   }
-  .date-input-container label {
-    font-size: 9px;
-  }
-  #burger {
-    align-self: flex-end;
-    padding: 2px;
-  }
-  #sidebar hr { margin-top: 25px; }
 }
 
 /* MapLibre markers and popups z-index */
