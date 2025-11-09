@@ -268,6 +268,22 @@ class MapManager {
       .setPopup(popup)
       .addTo(this.map);
 
+    // Add click handler to zoom and center on marker using DOM element
+    const markerElement = marker.getElement();
+    markerElement.addEventListener('click', (e) => {
+      console.log('Marker clicked, flying to:', event.lon, event.lat);
+      // Prevent default MapLibre behavior
+      e.stopPropagation();
+      // Close any open popups first
+      this.closeAllPopups();
+      // Fly to location
+      this.flyTo(event.lon, event.lat, 14);
+      // Open popup after flyTo animation
+      setTimeout(() => {
+        marker.togglePopup();
+      }, 300);
+    });
+
     this.markers.push(marker);
     this.markerById.set(event.id, marker);
 
@@ -407,8 +423,11 @@ class MapManager {
    * @param {number} zoom - Zoom level
    */
   flyTo(lon, lat, zoom = 14) {
+    console.log('flyTo called with:', lon, lat, zoom, 'map exists:', !!this.map);
     if (this.map) {
       this.map.flyTo({ center: [lon, lat], zoom });
+    } else {
+      console.error('Map not initialized');
     }
   }
 
