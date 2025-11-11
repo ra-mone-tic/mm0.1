@@ -413,7 +413,7 @@ html[data-theme="test"]{
   --text-0:#2B2A29; --text-1:#6B7280; --text-2:#D1D5DB;
   --brand:#2f7ef7; --accent:#22b07d;
   --radius-sm:8px; --radius-md:12px;
-  --shadow-md: 0 0 16px rgba(0,0,0,0.1), 0 0 32px #22d3ee;
+  --shadow-md: 0 0 16px #22d3ee, 0 0 32px #f472b6;
 }
 html[data-theme="test"] .sidebar-footer {
   background: #f9c5ff; /* Непрозрачный вариант surface-1 для test */
@@ -434,8 +434,14 @@ html[data-theme="test"] #bottomBar {
 }
 
 html[data-theme="test"] .search-field {
-  background: rgba(210, 205, 231, 0.5);
+  background: #d2cde7;
 }
+
+html[data-theme="test"] .search-field:focus-within {
+  box-shadow: var(--shadow-md);
+}
+
+
 
 html[data-theme="test"] #controls {
   box-shadow: 0 20px 50px rgba(0,0,0,.45);
