@@ -283,7 +283,7 @@ html[data-theme="amoled"] input[type="date"]{
 .popup-text,
 .popup-text-full {
   font-size: 12px;
-  line-height: 100%;
+  line-height: 120%;
 }
 
 .popup-content button.expand-btn,
