@@ -382,7 +382,7 @@ html[data-theme="neon"] .calendar__day--other-month {
   top: 0;
   left: 0;
   right: 0;
-  background: var(--surface-1);
+  background: linear-gradient(to bottom, transparent 50%, var(--surface-1) 100%);
   height: 108px;
   z-index: 1100;
 }
@@ -393,10 +393,10 @@ html[data-theme="neon"] .calendar__day--other-month {
   margin: 0;
 }
 #sidebar #upcoming { margin-top: 19px; }
-html[data-theme="minimal"] .sidebar-header { background: #d2cde7; }
-html[data-theme="neon"] .sidebar-header { background: rgba(18,20,28,1); }
-html[data-theme="test"] .sidebar-header { background: #d2cde7; }
-html[data-theme="test2"] .sidebar-header { background: rgba(18,20,28,1); }
+html[data-theme="minimal"] .sidebar-header { background: linear-gradient(to bottom, transparent 50%, #d2cde7 100%); }
+html[data-theme="neon"] .sidebar-header { background: linear-gradient(to bottom, transparent 50%, rgba(18,20,28,1) 100%); }
+html[data-theme="test"] .sidebar-header { background: linear-gradient(to bottom, transparent 50%, #d2cde7 100%); }
+html[data-theme="test2"] .sidebar-header { background: linear-gradient(to bottom, transparent 50%, rgba(18,20,28,1) 100%); }
 
 
 /* Непрозрачный футер сайдбара для тем minimal и neon */
@@ -809,7 +809,7 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 2;
+  z-index: 10;
   height: 109px; /* 29px + padding */
   min-height: 109px;
   max-height: 109px;
@@ -999,27 +999,25 @@ html[data-theme="test2"] #toggleArchive {
 #sidebar {
   position: fixed;
   right: 0;
-  top: 0;
+  top: 109px;
   bottom: 109px;
   width: 320px;
   background: var(--surface-1);
   border-left: var(--border);
-  border-top: var(--border);
   border-bottom: var(--border);
-  border-top-left-radius: var(--radius-md);
   border-bottom-left-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   font-size: var(--font-size-base);
   overflow: hidden;
-  transform: translateX(100%);
+  transform: translateY(calc(-100% - 109px));
   transition: transform .3s;
-  z-index: 1;
+  z-index: 9;
 }
 
 .sidebar-content {
-  position: relative;
+  position: fixed;
   top: 108px;
-  height: calc(100% - 108px);
+  height: calc(100vh - 108px);
   overflow-y: auto;
   padding-top: 1px;
   padding-left: 12px;
@@ -1027,7 +1025,7 @@ html[data-theme="test2"] #toggleArchive {
   padding-bottom: 0;
 }
 
-#sidebar.open { transform: translateX(0); }
+#sidebar.open { transform: translateY(0); }
 
 #sidebar .item {
   margin-bottom: 12px;
