@@ -6,7 +6,7 @@ export function setTheme(t){
   try{ localStorage.setItem('meowmap-theme', t); }catch(e){ /* ignore */ }
   const logo = document.getElementById('logo');
   if(logo){
-    logo.src = (t === 'neon' || t === 'test2') ? 'assets/logo1.png' : 'assets/Vector.png';
+    logo.src = (t === 'neon') ? 'assets/logo1.png' : 'assets/Vector.png';
   }
 }
 export function getTheme(){

@@ -967,6 +967,9 @@ input[type="date"]::-moz-date-input {
 }
 
 #logo {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
   width: 188px; /* Эталон 1440x900 */
   height: 45px; /* Эталон 1440x900 */
   display: flex;
@@ -974,6 +977,8 @@ input[type="date"]::-moz-date-input {
   padding: 0;
   border-radius: var(--radius-xs);
   transition: background var(--fx-fast);
+  z-index: 1000;
+  cursor: pointer;
 }
 
 #help, #burger {
@@ -1314,6 +1319,8 @@ html[data-theme="test2"] #toggleArchive {
   #logo {
     width: 134px; /* Пропорционально 1440x900 */
     height: 32px; /* Пропорционально 1440x900 */
+    bottom: 17px;
+    right: 17px;
   }
   .maplibregl-ctrl-top-right { top: 83px !important; } /* 66px + 17px */
   .calendar-modal {
@@ -1353,6 +1360,8 @@ html[data-theme="test2"] #toggleArchive {
   #logo {
     width: 100px; /* Пропорционально 1440x900 */
     height: 24px; /* Пропорционально 1440x900 */
+    bottom: 13px;
+    right: 13px;
   }
   .maplibregl-ctrl-top-right { top: 63px !important; } /* 50px + 13px */
   .calendar-modal {
@@ -1401,6 +1410,8 @@ html[data-theme="test2"] #toggleArchive {
   #logo {
     width: 49px; /* Пропорционально 1440x900 */
     height: 12px; /* Пропорционально 1440x900 */
+    bottom: 6px;
+    right: 6px;
   }
   .maplibregl-ctrl-top-right { top: 30px !important; } /* 24px + 6px */
   .calendar-modal {
