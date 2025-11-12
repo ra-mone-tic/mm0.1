@@ -465,7 +465,21 @@ html[data-theme="test"] .locate-control {
   box-shadow: var(--shadow-md);
 }
 
-html[data-theme="test"] #sidebar {
+html[data-theme="test"] #sidebar.open {
+  box-shadow: var(--shadow-md);
+}
+
+html[data-theme="neon"] .zoom-control,
+html[data-theme="neon"] .locate-control {
+  background: #2B2A29;
+  box-shadow: var(--shadow-md);
+}
+
+html[data-theme="neon"] .locate-control svg {
+  fill: var(--text-0);
+}
+
+html[data-theme="neon"] #sidebar.open {
   box-shadow: var(--shadow-md);
 }
 
@@ -534,10 +548,15 @@ html[data-theme="test2"] #bottomBar {
 
 html[data-theme="test2"] .zoom-control,
 html[data-theme="test2"] .locate-control {
+  background: #2B2A29;
   box-shadow: var(--shadow-md);
 }
 
-html[data-theme="test2"] #sidebar {
+html[data-theme="test2"] .locate-control svg {
+  fill: var(--text-0);
+}
+
+html[data-theme="test2"] #sidebar.open {
   box-shadow: var(--shadow-md);
 }
 
