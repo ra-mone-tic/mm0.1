@@ -5,6 +5,7 @@
 
 import { MAP_OPTIONS, CONTROLS, SELECTORS, CLASSES, DURATIONS } from './constants.js';
 import { debounce, bindKeyboardActivation, sanitizeHtml } from './utils.js';
+import { getTheme } from './theme.js';
 
 /**
  * Custom navigation control for MapLibre
@@ -71,6 +72,9 @@ class MapManager {
     this.markers = [];
     this.markerById = new Map();
     this.isInitialized = false;
+    this.currentDate = null;
+    this.currentEvents = [];
+    this.onShareCallback = null;
   }
 
   /**
@@ -97,6 +101,7 @@ class MapManager {
       this.map.on('load', () => {
         this._setupControls();
         this._setupResizeHandler();
+        this._setupThemeObserver();
         this.isInitialized = true;
         resolve(this.map);
       });
@@ -258,6 +263,37 @@ class MapManager {
   }
 
   /**
+   * Setup theme change observer
+   * @private
+   */
+  _setupThemeObserver() {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          this.refreshMarkers();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme']
+    });
+  }
+
+  /**
+   * Refresh markers with current theme
+   */
+  refreshMarkers() {
+    if (!this.currentEvents.length || !this.onShareCallback) return;
+
+    this.clearMarkers();
+    this.currentEvents.forEach(event => {
+      this.addMarker(event, this.onShareCallback);
+    });
+  }
+
+  /**
    * Clear all markers from map
    */
   clearMarkers() {
@@ -291,7 +327,21 @@ class MapManager {
     })
       .setHTML(this._createPopupContent(event, onShare));
 
-    const marker = new maplibregl.Marker({ color: '#22d3ee' })
+    const currentTheme = getTheme();
+    let markerOptions = {};
+
+    if (currentTheme === 'test') {
+      const img = document.createElement('img');
+      img.src = 'assets/metka.png';
+      img.style.width = '24px';
+      img.style.height = 'auto';
+      markerOptions.element = img;
+      markerOptions.anchor = 'bottom';
+    } else {
+      markerOptions.color = '#22d3ee';
+    }
+
+    const marker = new maplibregl.Marker(markerOptions)
       .setLngLat([event.lon, event.lat])
       .setPopup(popup)
       .addTo(this.map);

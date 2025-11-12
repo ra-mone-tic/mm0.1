@@ -206,11 +206,16 @@ function handleDateChange(dateStr) {
   const eventsForDate = eventListManager.getEventsForDate(dateStr);
   mapManager.clearMarkers();
 
+  // Save current state for theme switching
+  mapManager.currentDate = dateStr;
+  mapManager.currentEvents = eventsForDate;
+  mapManager.onShareCallback = (eventId) => {
+    // Handle share link copy
+    copyShareLink(eventId);
+  };
+
   eventsForDate.forEach(event => {
-    mapManager.addMarker(event, (eventId) => {
-      // Handle share link copy
-      copyShareLink(eventId);
-    });
+    mapManager.addMarker(event, mapManager.onShareCallback);
   });
 
   // Highlight first event in list
