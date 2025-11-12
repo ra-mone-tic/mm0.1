@@ -40,6 +40,7 @@
   --font-ui: 'NTSomic', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --date-icon-filter:none; /* фильтр для иконки календаря */
+  --popup-top-offset: 93px; /* смещение для поп-апов карты, исключая верхнюю панель */
 
   /* Grid and spacing (multiples of 8px) */
   --grid-columns: 12;
@@ -68,6 +69,7 @@
     --grid-gutter: 17px;
     --grid-margin: 34px;
     --date-font-size: 17px;
+    --popup-top-offset: 66px;
   }
 }
 
@@ -84,6 +86,7 @@
     --body-size: 15px;
     --caption-size: 12px;
     --date-font-size: 16px;
+    --popup-top-offset: 50px;
   }
 }
 
@@ -100,6 +103,7 @@
     --body-size: 14px;
     --caption-size: 11px;
     --date-font-size: 16px;
+    --popup-top-offset: 24px;
   }
 }
 
@@ -1438,6 +1442,13 @@ html[data-theme="test2"] #toggleArchive {
 .maplibregl-marker { z-index: 100 !important; }
 .maplibregl-popup { z-index: 200 !important; }
 .maplibregl-popup-content { z-index: 200 !important; }
+
+/* Ограничение области позиционирования поп-апов карты, исключая верхнюю панель */
+.maplibregl-popup {
+  /* Ограничиваем область позиционирования, исключая верхнюю панель */
+  top: var(--popup-top-offset) !important;
+  max-height: calc(100vh - var(--popup-top-offset) - 90px);
+}
 
 /* Adjust MapLibre controls position */
 .maplibregl-ctrl-top-right { top: 117px !important; right: 24px !important; }
