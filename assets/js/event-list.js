@@ -13,6 +13,7 @@ import {
   bindKeyboardActivation,
   sanitizeHtml
 } from './utils.js';
+import { mapManager } from './map.js';
 
 /**
  * Event list state and management
@@ -417,6 +418,7 @@ class EventListManager {
 
     // Close popups when opening sidebar
     if (!this.sidebar.classList.contains(CLASSES.open)) {
+      mapManager.closeAllPopups();
       document.dispatchEvent(new CustomEvent('sidebar:opening'));
     }
 

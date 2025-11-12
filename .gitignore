@@ -16,6 +16,7 @@ venv/
 logs/
 geocode_log.json
 code_review.md
+elements_sizes.md
 
 ## OS/editor junk
 .DS_Store

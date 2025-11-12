@@ -5,6 +5,7 @@
 
 import { SELECTORS, CLASSES, MESSAGES, DURATIONS, DEVICE_TODAY } from './constants.js';
 import { debounce, generateTransliterations, sanitizeHtml } from './utils.js';
+import { mapManager } from './map.js';
 
 /**
  * Search state and management
@@ -316,6 +317,7 @@ class SearchManager {
     if (!this.searchPanel || this.isPanelOpen) return;
 
     // Close popups
+    mapManager.closeAllPopups();
     document.dispatchEvent(new CustomEvent('sidebar:opening'));
 
     this.searchPanel.classList.add('open');

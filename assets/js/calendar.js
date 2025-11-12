@@ -4,6 +4,7 @@
  */
 
 import { SELECTORS, KEYS } from './constants.js';
+import { mapManager } from './map.js';
 
 /**
  * Calendar state and management
@@ -142,6 +143,7 @@ class CalendarManager {
     if (this.isOpen) {
       this.hide();
     } else {
+      mapManager.closeAllPopups();
       this.show(new Date(this.dateInput?.value || null));
     }
   }
@@ -155,17 +157,20 @@ class CalendarManager {
 
     const inputRect = this.dateInput.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-    const calendarHeight = 400;
+    const controls = document.getElementById('controls');
+    const controlsHeight = controls ? controls.offsetHeight : 93;
+    const calendarHeight = inputRect.width; // Square calendar
 
     const calendar = this.modal;
     calendar.style.position = 'fixed';
     calendar.style.left = `${inputRect.left}px`;
-    calendar.style.width = `${Math.min(inputRect.width, 320)}px`;
+    calendar.style.width = `${inputRect.width}px`;
+    calendar.style.height = `${inputRect.width}px`;
 
     if (inputRect.bottom + calendarHeight > viewportHeight) {
       calendar.style.top = `${inputRect.top - calendarHeight}px`;
     } else {
-      calendar.style.top = `${inputRect.bottom + 4}px`;
+      calendar.style.top = `${controlsHeight + 24}px`;
     }
   }
 

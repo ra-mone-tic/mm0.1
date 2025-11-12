@@ -24,6 +24,22 @@
 
   <div id="layout">
     <div id="map" role="application" aria-label="Карта событий"></div>
+
+    <!-- Кастомные кнопки навигации карты -->
+    <div class="custom-controls">
+      <div class="zoom-control">
+        <div class="zoom-btn" id="zoom-in" aria-label="Увеличить масштаб">+</div>
+        <div class="separator"></div>
+        <div class="zoom-btn" id="zoom-out" aria-label="Уменьшить масштаб">−</div>
+      </div>
+      <div class="locate-control" id="locate-btn" aria-label="Определить текущее местоположение на карте">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="3" />
+          <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none" />
+          <path d="M12 4v2M12 18v2M4 12h2M18 12h2" stroke="currentColor" stroke-width="2" />
+        </svg>
+      </div>
+    </div>
   </div>
 
   <aside id="sidebar" aria-label="Список событий">

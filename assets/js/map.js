@@ -108,25 +108,53 @@ class MapManager {
    * @private
    */
   _setupControls() {
-    // Add navigation control
-    this.map.addControl(new CustomNavigationControl(), 'top-right');
-
-    // Add geolocation control
-    this.map.addControl(new maplibregl.GeolocateControl({
-      positionOptions: { enableHighAccuracy: true },
-      showUserLocation: true,
-      labelText: 'Найти моё местоположение',
-      noLocationText: 'Геолокация недоступна',
-      searchingText: 'Поиск местоположения...',
-      foundText: 'Моё местоположение'
-    }), 'top-right');
-
-    // Setup geolocate button descriptions
-    this._setupGeolocateButton();
+    // Setup custom controls
+    this._setupCustomControls();
 
     // Disable rotation
     this.map.dragRotate.disable();
     this.map.touchZoomRotate.disableRotation();
+  }
+
+  /**
+   * Setup custom controls
+   * @private
+   */
+  _setupCustomControls() {
+    const zoomInBtn = document.getElementById('zoom-in');
+    const zoomOutBtn = document.getElementById('zoom-out');
+    const locateBtn = document.getElementById('locate-btn');
+
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', () => {
+        this.map.zoomIn();
+      });
+    }
+
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', () => {
+        this.map.zoomOut();
+      });
+    }
+
+    if (locateBtn) {
+      locateBtn.addEventListener('click', () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              this.flyTo(longitude, latitude, 14);
+            },
+            (error) => {
+              console.error('Geolocation error:', error);
+              // Could show a toast or alert here
+            }
+          );
+        } else {
+          console.error('Geolocation not supported');
+        }
+      });
+    }
   }
 
   /**
