@@ -432,7 +432,7 @@ html[data-theme="test"]{
   --text-0:#2B2A29; --text-1:#6B7280; --text-2:#D1D5DB;
   --brand:#2f7ef7; --accent:#22b07d;
   --radius-sm:8px; --radius-md:12px;
-  --shadow-md: 0 0 16px #22d3ee, 0 0 32px #f472b6;
+  --shadow-md:0 20px 50px rgba(0,0,0,.45);
 }
 html[data-theme="test"] .sidebar-footer {
   background: #f9c5ff; /* Непрозрачный вариант surface-1 для test */
@@ -457,6 +457,15 @@ html[data-theme="test"] .search-field {
 }
 
 html[data-theme="test"] .search-field:focus-within {
+  box-shadow: var(--shadow-md);
+}
+
+html[data-theme="test"] .zoom-control,
+html[data-theme="test"] .locate-control {
+  box-shadow: var(--shadow-md);
+}
+
+html[data-theme="test"] #sidebar {
   box-shadow: var(--shadow-md);
 }
 
@@ -521,6 +530,15 @@ html[data-theme="test2"] #bottomBar {
   background: transparent;
   border-top: none;
   box-shadow: none;
+}
+
+html[data-theme="test2"] .zoom-control,
+html[data-theme="test2"] .locate-control {
+  box-shadow: var(--shadow-md);
+}
+
+html[data-theme="test2"] #sidebar {
+  box-shadow: var(--shadow-md);
 }
 
 html[data-theme="test"] #controls {
