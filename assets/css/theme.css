@@ -35,7 +35,7 @@
   --border:1px solid color-mix(in srgb, var(--text-1) 15%, transparent);
   --radius-xs:6px; --radius-sm:10px; --radius-md:16px; --radius-lg:22px;
   --shadow-sm:0 1px 2px rgba(0,0,0,.06);
-  --shadow-md:0 6px 24px rgba(0,0,0,.10);
+  --shadow-md:0 6px 10px rgba(0,0,0,.10);
   --fx-fast:.15s; --fx-slow:.28s;
   --font-ui: 'NTSomic', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -1330,6 +1330,9 @@ html[data-theme="test2"] #toggleArchive {
     height: 202px;
   }
   .welcome-modal__content {
+    width: 512px; /* Пропорционально 720x(1024/1440) */
+    height: 307px; /* Пропорционально 360x(768/900) */
+    border-radius: 32px; /* Пропорционально 45x(1024/1440) */
     top: calc(90px + 10vw);
     bottom: calc(90px + 10vw + 30px);
     height: auto;
@@ -1371,6 +1374,9 @@ html[data-theme="test2"] #toggleArchive {
     height: 152px;
   }
   .welcome-modal__content {
+    width: 384px; /* Пропорционально 720x(768/1440) */
+    height: 230px; /* Пропорционально 360x(576/900) */
+    border-radius: 24px; /* Пропорционально 45x(768/1440) */
     top: calc(90px + 8vw);
     bottom: calc(90px + 8vw + 25px);
     height: auto;
@@ -1421,6 +1427,9 @@ html[data-theme="test2"] #toggleArchive {
     height: 120px;
   }
   .welcome-modal__content {
+    width: 187px; /* Пропорционально 720x(375/1440) */
+    height: 107px; /* Пропорционально 360x(267/900) */
+    border-radius: 12px; /* Пропорционально 45x(375/1440) */
     padding: 16px;
     height: auto;
     top: calc(90px + 10vw);
@@ -1734,11 +1743,12 @@ html[data-theme="test2"] #toggleArchive {
   background: var(--surface-1);
   color: var(--text-0);
   padding: 32px;
-  border-radius: var(--radius-lg);
+  border-radius: 45px;
   box-shadow: var(--shadow-md);
-  max-width: 600px;
-  width: 95vw;
-  height: 450px;
+  width: 720px;
+  height: 360px;
+  max-width: 95vw;
+  max-height: 95vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1793,10 +1803,10 @@ html[data-theme="test2"] #toggleArchive {
 }
 
 .welcome-logo {
-  margin: 0 auto 16px;
+  margin: 39px auto 16px;
   display: block;
-  width: 60px;
-  height: 60px;
+  width: 255px;
+  height: 61px;
 }
 
 .inline-logo {
@@ -1806,14 +1816,23 @@ html[data-theme="test2"] #toggleArchive {
 }
 
 /* Адаптив для приветственного экрана */
+@media (max-width: 1024px) {
+  .welcome-logo {
+    width: 182px; /* Пропорционально 255x(1024/1440) */
+    height: 52px; /* Пропорционально 61x(768/900) */
+    margin-top: 33px; /* Пропорционально 39x(768/900) */
+  }
+}
+
 @media (max-width: 768px) {
   .welcome-modal__content {
     padding: 24px;
     height: 400px;
   }
   .welcome-logo {
-    width: 55px;
-    height: 55px;
+    width: 136px; /* Пропорционально 255x(768/1440) */
+    height: 39px; /* Пропорционально 61x(576/900) */
+    margin-top: 25px; /* Пропорционально 39x(576/900) */
   }
   .welcome-modal p {
     font-size: 18px;
@@ -1883,8 +1902,9 @@ html[data-theme="test2"] #toggleArchive {
     max-height: calc(100vh - 180px - 20vw - 30px);
   }
   .welcome-logo {
-    width: 40px;
-    height: 40px;
+    width: 67px; /* Пропорционально 255x(375/1440) */
+    height: 18px; /* Пропорционально 61x(267/900) */
+    margin-top: 11px; /* Пропорционально 39x(267/900) */
     margin-bottom: 8px;
   }
   .welcome-modal p {
