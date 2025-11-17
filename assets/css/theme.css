@@ -446,8 +446,11 @@ html[data-theme="test"] .popup-content button.share-btn {
   color: var(--text-0);
 }
 html[data-theme="test"] .popup-content button.expand-btn:hover,
-html[data-theme="test"] .popup-content button.share-btn:hover {
-  background: color-mix(in srgb, #d2cde7 85%, white);
+html[data-theme="test"] .popup-content button.share-btn:hover,
+html[data-theme="minimal"] .popup-content button.expand-btn:hover,
+html[data-theme="minimal"] .popup-content button.share-btn:hover {
+  background: #FFFFFF;
+  box-shadow: 0 0 10px #2B2A29;
 }
 
 html[data-theme="test"] #bottomBar {
@@ -542,6 +545,20 @@ html[data-theme="test2"] .welcome-btn {
 }
 html[data-theme="test2"] .welcome-btn:hover {
   background: color-mix(in srgb, #2B2A29 85%, #0a0b0f);
+}
+
+html[data-theme="test"] .welcome-btn:hover,
+html[data-theme="minimal"] .welcome-btn:hover,
+html[data-theme="test"] #help:hover,
+html[data-theme="minimal"] #help:hover,
+html[data-theme="test"] #burger:hover,
+html[data-theme="minimal"] #burger:hover,
+html[data-theme="test"] input[type="date"]:hover,
+html[data-theme="minimal"] input[type="date"]:hover,
+html[data-theme="test"] #toggleArchive:hover,
+html[data-theme="minimal"] #toggleArchive:hover {
+  background: #FFFFFF !important;
+  box-shadow: 0 0 10px #2B2A29;
 }
 
 html[data-theme="test2"] #bottomBar {
