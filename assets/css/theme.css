@@ -1665,7 +1665,6 @@ html[data-theme="test2"] #toggleArchive {
 /* Animated popup */
 .animated-popup .maplibregl-popup-content {
   opacity: 1;
-  animation: popupFadeIn 0.3s ease-in;
 }
 
 @keyframes popupFadeIn {
