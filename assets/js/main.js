@@ -355,7 +355,8 @@ function showWelcomePage1() {
 
   setTimeout(() => {
     const theme = document.documentElement.getAttribute('data-theme');
-    const html = `<img class="welcome-logo" src="${theme === 'neon' || theme === 'test2' ? 'assets/logo1.png' : 'assets/Vector.png'}" alt="Логотип"/>
+    const html = `<button class="welcome-close" onclick="closeWelcomeModal()"><img src="assets/Закрывашка.svg" alt="Закрыть"></button>
+<img class="welcome-logo" src="${theme === 'neon' || theme === 'test2' ? 'assets/logo1.png' : 'assets/Vector.png'}" alt="Логотип"/>
 <p>Привет! Это MEOW Карта, и здесь мы показываем о мероприятиях Калининграда - культурных, познавательных, развлекательных и не очень. Добро пожаловать!</p>
 <div class="welcome-buttons">
 <button class="welcome-btn" onclick="showWelcomePage2()">Расскажи подробнее о проекте</button>
@@ -384,7 +385,8 @@ function showWelcomePage2() {
   children.forEach(el => el.style.opacity = 0);
 
   setTimeout(() => {
-    const html = `<p>MEOW Карта - проект команды MEOW Records. Мы давно работаем с музыкальной сценой Калининграда, организуем мероприятия, оказываем техническую и информационную поддержку, выступаем сами.
+    const html = `<button class="welcome-close" onclick="closeWelcomeModal()"><img src="assets/Закрывашка.svg" alt="Закрыть"></button>
+<p>MEOW Карта - проект команды MEOW Records. Мы давно работаем с музыкальной сценой Калининграда, организуем мероприятия, оказываем техническую и информационную поддержку, выступаем сами.
 
 Здесь мы собираем события любимого города, рассказываем о них в доступной форме и так, надеемся, развиваем интерес к культуре нашего региона внутри и за его пределами.
 

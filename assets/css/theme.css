@@ -1090,13 +1090,14 @@ html[data-theme="test2"] #toggleArchive {
 
 .sidebar-content {
   position: fixed;
-  top: 93px;
-  height: calc(100vh - 93px);
+  top: 108px;
+  bottom: 0;
+  height: auto;
   overflow-y: auto;
   padding-top: 1px;
   padding-left: 12px;
   padding-right: 12px;
-  padding-bottom: 0;
+  padding-bottom: 30px;
 }
 
 #sidebar.open { transform: translateY(0); }
@@ -1760,6 +1761,24 @@ html[data-theme="test2"] #toggleArchive {
   transition: opacity 0.15s ease-in-out;
 }
 
+.welcome-close {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  width: 22.5px;
+  height: 22.5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10;
+}
+
+.welcome-close img {
+  width: 100%;
+  height: 100%;
+}
+
 .welcome-modal.show .welcome-modal__content {
   opacity: 1;
 }
@@ -1822,6 +1841,12 @@ html[data-theme="test2"] #toggleArchive {
     height: 52px; /* Пропорционально 61x(768/900) */
     margin-top: 33px; /* Пропорционально 39x(768/900) */
   }
+  .welcome-close {
+    width: 15.9px; /* Пропорционально 22.5x(1024/1440) */
+    height: 15.9px; /* Пропорционально 22.5x(1024/1440) */
+    top: 21.3px; /* Пропорционально 30x(1024/1440) */
+    right: 21.3px; /* Пропорционально 30x(1024/1440) */
+  }
 }
 
 @media (max-width: 768px) {
@@ -1840,6 +1865,12 @@ html[data-theme="test2"] #toggleArchive {
   .welcome-btn {
     padding: 10px 14px;
     font-size: 16px;
+  }
+  .welcome-close {
+    width: 12.2px; /* Пропорционально 22.5x(768/1440) */
+    height: 12.2px; /* Пропорционально 22.5x(768/1440) */
+    top: 16px; /* Пропорционально 30x(768/1440) */
+    right: 16px; /* Пропорционально 30x(768/1440) */
   }
 }
 
@@ -1918,5 +1949,11 @@ html[data-theme="test2"] #toggleArchive {
     padding: 4px 8px;
     font-size: 12px;
     margin: 2px;
+  }
+  .welcome-close {
+    width: 5.9px; /* Пропорционально 22.5x(375/1440) */
+    height: 5.9px; /* Пропорционально 22.5x(375/1440) */
+    top: 7.8px; /* Пропорционально 30x(375/1440) */
+    right: 7.8px; /* Пропорционально 30x(375/1440) */
   }
 }
