@@ -359,9 +359,9 @@ function showWelcomePage1() {
 <img class="welcome-logo" src="${theme === 'neon' || theme === 'test2' ? 'assets/logo1.png' : 'assets/Vector.png'}" alt="Логотип"/>
 <p>Привет! Это MEOW Карта, и здесь мы показываем о мероприятиях Калининграда - культурных, познавательных, развлекательных и не очень. Добро пожаловать!</p>
 <div class="welcome-buttons">
-<button class="welcome-btn" onclick="showWelcomePage2()">Расскажи подробнее о проекте</button>
-<button class="welcome-btn" onclick="">Как здесь всё устроено?</button>
-<button class="welcome-btn" onclick="closeWelcomeModal()">Давай движа!</button>
+<button class="welcome-btn" onclick="showWelcomePage2()">Как этим пользоваться?</button>
+<button class="welcome-btn" onclick="">Расскажи о проекте</button>
+<button class="welcome-btn" onclick="closeWelcomeModal()">Хочу сам потыкать!</button>
 </div>`;
     content.innerHTML = html;
 
