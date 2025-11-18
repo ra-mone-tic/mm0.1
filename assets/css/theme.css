@@ -1796,14 +1796,15 @@ html[data-theme="test2"] #toggleArchive {
 
 .welcome-btn {
   background: #d2cde7;
-  color: var(--text-0);
+  color: #2B2A29;
   border: none;
   border-radius: 9999px;
   width: 200px;
   height: 61px;
-  font-family: var(--font-ui);
-  font-size: 18px;
-  font-weight: 500;
+  font-family: 'NTSomic';
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 24px;
   cursor: pointer;
   transition: background var(--fx-fast);
   display: flex;
@@ -1835,9 +1836,12 @@ html[data-theme="test2"] #toggleArchive {
   width: 665px;
   height: 120px;
   margin: 0;
-  line-height: 1.6;
-  font-size: 20px;
+  font-family: 'NTSomic';
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 30px;
   text-align: center;
+  color: #2B2A29;
 }
 
 .welcome-logo {
