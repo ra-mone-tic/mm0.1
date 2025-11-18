@@ -1850,6 +1850,14 @@ html[data-theme="test2"] #toggleArchive {
   color: #2B2A29;
 }
 
+.welcome-text--page2 {
+  top: 39px !important;
+  bottom: 120px;
+  height: auto;
+  overflow: visible;
+  font-size: 20px !important;
+}
+
 .welcome-logo {
   position: absolute;
   left: 50%;
