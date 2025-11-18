@@ -1825,6 +1825,12 @@ html[data-theme="test2"] #toggleArchive {
   gap: 36px;
 }
 
+.welcome-buttons--center {
+  left: 50%;
+  transform: translateX(-50%);
+  gap: 0;
+}
+
 .welcome-modal h1, .welcome-modal h2 {
   margin: 0 0 16px;
 }

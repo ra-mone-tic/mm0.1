@@ -391,7 +391,7 @@ function showWelcomePage2() {
 Здесь мы собираем события любимого города, рассказываем о них в доступной форме и так, надеемся, развиваем интерес к культуре нашего региона внутри и за его пределами.
 
 Итак, давай, покажу, как здесь всё устроено.</p>
-<div class="welcome-buttons">
+<div class="welcome-buttons welcome-buttons--center">
 <button class="welcome-btn" onclick="closeWelcomeModal()">Давай</button>
 </div>`;
     content.innerHTML = html;
