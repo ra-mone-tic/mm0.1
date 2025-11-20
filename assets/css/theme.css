@@ -561,6 +561,25 @@ html[data-theme="minimal"] #toggleArchive:hover {
   box-shadow: 0 0 10px #2B2A29;
 }
 
+html[data-theme="neon"] .welcome-btn:hover,
+html[data-theme="neon"] #help:hover,
+html[data-theme="neon"] #burger:hover,
+html[data-theme="neon"] input[type="date"]:hover,
+html[data-theme="neon"] #toggleArchive:hover,
+html[data-theme="neon"] .popup-content button.expand-btn:hover,
+html[data-theme="neon"] .popup-content button.share-btn:hover,
+html[data-theme="test2"] .welcome-btn:hover,
+html[data-theme="test2"] #help:hover,
+html[data-theme="test2"] #burger:hover,
+html[data-theme="test2"] input[type="date"]:hover,
+html[data-theme="test2"] #toggleArchive:hover,
+html[data-theme="test2"] .popup-content button.expand-btn:hover,
+html[data-theme="test2"] .popup-content button.share-btn:hover {
+  background: #FFFFFF !important;
+  color: #2B2A29 !important;
+  box-shadow: 0 0 10px #2B2A29;
+}
+
 html[data-theme="test2"] #bottomBar {
   background: transparent;
   border-top: none;
