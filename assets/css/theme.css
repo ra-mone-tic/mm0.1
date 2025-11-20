@@ -773,6 +773,11 @@ html[data-theme="test2"] .calendar__day--today {
   border: none;
 }
 
+html[data-theme="neon"] .calendar__day:hover,
+html[data-theme="test2"] .calendar__day:hover {
+  background: rgba(255,255,255,0.1);
+}
+
 .calendar__day--today {
   position: relative;
   background: var(--surface-2);
@@ -1843,11 +1848,11 @@ html[data-theme="test2"] #toggleArchive {
   height: 120px;
   margin: 0;
   font-family: 'NTSomic';
-  font-weight: 600;
+  font-weight: 500;
   font-size: 24px;
   line-height: 30px;
   text-align: center;
-  color: #2B2A29;
+  color: var(--text-0);
 }
 
 .welcome-text--page2 {
